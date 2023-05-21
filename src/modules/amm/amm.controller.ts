@@ -33,13 +33,19 @@ export class AmmController {
     return rs;
   }
 
+  @Get("tokens_lock")
+  @UseInterceptors(CacheInterceptor)
+  async tokens_lock(@Req() req) {
+    const rs = await this.ammService.locks(req.query);
+    return rs;
+  }
+
   @Get("token")
   @UseInterceptors(CacheInterceptor)
   async token(@Req() req) {
     const rs = await this.ammService.getToken(req.query);
     return rs;
   }
-
 
   @Get("claim_history")
   @UseInterceptors(CacheInterceptor)

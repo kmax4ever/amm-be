@@ -6,7 +6,7 @@ import { SyncHandlerService } from "src/core/syncHandler.service";
 import { Event } from "src/models/event.entity";
 import { DexMatching } from "./models/dexMatching.entity";
 import { Listing } from "./models/Listing.entity";
-import crypto from "src/utils/crypto";
+import crypto, { web3Default } from "src/utils/crypto";
 import { CONTRACT_SYNC } from "./config/dexConfig";
 import { TransferEvent } from "./models/transferEvent.entity";
 import { Token } from "./models/token.entity";
@@ -195,7 +195,7 @@ export class DexSyncHandler extends SyncHandlerService {
       duration,
       sender,
     } = updatedLockData;
-    const { transactionHash: txhash } = event;
+    const { transactionHash: txhash, blockNumber } = event;
 
     let tokenData;
     if (!tokenData) {
@@ -213,6 +213,7 @@ export class DexSyncHandler extends SyncHandlerService {
         { session, upsert: true, new: true }
       );
     }
+    const blockData = await web3Default.eth.getBlock(blockNumber);
 
     const { symbol, name, decimals } = tokenData;
 
@@ -231,6 +232,7 @@ export class DexSyncHandler extends SyncHandlerService {
           decimals,
           txhash,
           duration,
+          timestamp: blockData.timestamp,
         } as any,
       ],
       { session }

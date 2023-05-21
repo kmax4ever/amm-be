@@ -46,4 +46,6 @@ export class ClaimHistory {
   amount: string;
   @prop()
   claimAmount: string;
+  @prop()
+  timestamp: number;
 }
