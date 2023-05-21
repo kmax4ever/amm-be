@@ -1,31 +1,50 @@
-import { Controller, Get, Post, Req ,CacheInterceptor,CacheTTL,UseInterceptors} from '@nestjs/common';
-import { json, Request } from 'express';
-import { MyLogger } from 'src/core/logger/logger.service';
-import { AmmService } from './amm.service';
-import { DexMatching } from './models/dexMatching.entity';
-import { InjectModel } from 'nestjs-typegoose';
-import { DocumentType, ReturnModelType } from '@typegoose/typegoose';
-import { get ,set} from '../../utils/memoryCache'
-import { getParam } from '../../utils/getParam'
-@Controller('amm')
+import {
+  Controller,
+  Get,
+  Post,
+  Req,
+  CacheInterceptor,
+  CacheTTL,
+  UseInterceptors,
+} from "@nestjs/common";
+import { json, Request } from "express";
+import { MyLogger } from "src/core/logger/logger.service";
+import { AmmService } from "./amm.service";
+import { DexMatching } from "./models/dexMatching.entity";
+import { InjectModel } from "nestjs-typegoose";
+import { DocumentType, ReturnModelType } from "@typegoose/typegoose";
+import { get, set } from "../../utils/memoryCache";
+import { getParam } from "../../utils/getParam";
+@Controller("amm")
 export class AmmController {
   constructor(
     @InjectModel(DexMatching)
     public readonly DexMatchingModel: ReturnModelType<typeof DexMatching>,
     private readonly logger: MyLogger,
-    private readonly dexService: AmmService,
+    private readonly ammService: AmmService
   ) {
-    this.logger.setContext('DexController');
+    this.logger.setContext("AmmController");
   }
 
-
-
-  @Get('getFightLogs')
+  @Get("tokens_listing")
   @UseInterceptors(CacheInterceptor)
-  @CacheTTL(120) //2 minutes
-  async getFightLogs(@Req() req) {
+  async tokens_listing(@Req() req) {
+    const rs = await this.ammService.listings(req.query);
+    return rs;
+  }
+
+  @Get("token")
+  @UseInterceptors(CacheInterceptor)
+  async token(@Req() req) {
+    const rs = await this.ammService.getToken(req.query);
+    return rs;
   }
 
 
-
+  @Get("claim_history")
+  @UseInterceptors(CacheInterceptor)
+  async claim_history(@Req() req) {
+    const rs = await this.ammService.claimHistory(req.query);
+    return rs;
+  }
 }
