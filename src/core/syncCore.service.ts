@@ -8,7 +8,7 @@ import { Block } from 'src/models/block.entity';
 import { Event } from 'src/models/event.entity';
 import { SyncStatus } from 'src/models/syncStatus.entity';
 import { DexSyncHandler } from 'src/modules/amm/ammSyncHandler.service';
-import { DexOrder } from 'src/modules/amm/models/dexOrder.entity';
+import { Listing } from 'src/modules/amm/models/dexOrder.entity';
 import { SyncHandlerService } from './syncHandler.service';
 const Web3 = require('web3');
 export const web3Default = new Web3(config.rpcEndpoint);
@@ -68,8 +68,8 @@ export class SyncCoreService {
     public readonly EventModel: ReturnModelType<typeof Event>,
     @InjectModel(SyncStatus)
     public readonly SyncStatusModel: ReturnModelType<typeof SyncStatus>,
-    @InjectModel(DexOrder)
-    public readonly DexOrderModel: ReturnModelType<typeof DexOrder>,
+    @InjectModel(Listing)
+    public readonly DexOrderModel: ReturnModelType<typeof Listing>,
   ) {
     this.modules = [dexSyncHandler];
 

@@ -1,19 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { ReturnModelType } from '@typegoose/typegoose';
-import { InjectModel } from 'nestjs-typegoose';
-import { Web3EventType } from 'src/core/syncCore.service';
-import { SyncHandlerService } from 'src/core/syncHandler.service';
-import { Event } from 'src/models/event.entity';
-import { DexMatching } from './models/dexMatching.entity';
-import { DexOrder } from './models/dexOrder.entity';
-import crypto from 'src/utils/crypto';
-import { dateFromNumber, toBigNumber } from 'src/utils/helper';
-import { ORDER_STATUS } from 'config/constants';
-import {
-  getOrderType,
-  CONTRACT_SYNC
-} from './config/dexConfig';
-import { TransferEvent } from './models/transferEvent.entity';
+import { Injectable } from "@nestjs/common";
+import { ReturnModelType } from "@typegoose/typegoose";
+import { InjectModel } from "nestjs-typegoose";
+import { Web3EventType } from "src/core/syncCore.service";
+import { SyncHandlerService } from "src/core/syncHandler.service";
+import { Event } from "src/models/event.entity";
+import { DexMatching } from "./models/dexMatching.entity";
+import { Listing } from "./models/dexOrder.entity";
+import crypto from "src/utils/crypto";
+import { dateFromNumber, toBigNumber } from "src/utils/helper";
+import { ORDER_STATUS } from "config/constants";
+import { CONTRACT_SYNC } from "./config/dexConfig";
+import { TransferEvent } from "./models/transferEvent.entity";
+import { Token } from "./models/token.entity";
+import { Lock } from "./models/Lock.entity";
+import { ClaimHistory } from "./models/claimHistory.entity";
 
 @Injectable()
 export class DexSyncHandler extends SyncHandlerService {
@@ -24,14 +24,20 @@ export class DexSyncHandler extends SyncHandlerService {
     //====module models=====
     @InjectModel(DexMatching)
     public readonly DexMatchingModel: ReturnModelType<typeof DexMatching>,
-    @InjectModel(DexOrder)
-    public readonly DexOrderModel: ReturnModelType<typeof DexOrder>,
+    @InjectModel(Listing)
+    public readonly DexOrderModel: ReturnModelType<typeof Listing>,
     @InjectModel(TransferEvent)
     public readonly TransferEventModel: ReturnModelType<typeof TransferEvent>,
+    @InjectModel(Token)
+    public readonly TokenModel: ReturnModelType<typeof Token>,
+    @InjectModel(Lock)
+    public readonly LockModel: ReturnModelType<typeof Lock>,
+    @InjectModel(ClaimHistory)
+    public readonly ClaimHistoryModel: ReturnModelType<typeof ClaimHistory>
   ) {
     super(EventModel);
     this.contracts = CONTRACT_SYNC();
-    this.moduleName = 'Amm';
+    this.moduleName = "Amm";
   }
 
   public async initDb() {
@@ -39,7 +45,7 @@ export class DexSyncHandler extends SyncHandlerService {
       await this.DexMatchingModel.createCollection();
       await this.DexOrderModel.createCollection();
       await this.TransferEventModel.createCollection();
-    } catch (err) { }
+    } catch (err) {}
   }
 
   public async onResetVersion() {
@@ -51,27 +57,17 @@ export class DexSyncHandler extends SyncHandlerService {
   public async processEvents(session: any, events: Web3EventType[]) {
     for (const event of events) {
       switch (event.event) {
-        case 'Matching':
-          await this.handleMatching(session, event);
+        case "ConfigListingToken":
+          await this.handleConfigListing(session, event);
           break;
-        case 'CreateOrder':
-          await this.handleCreateOrder(session, event);
+        case "DisableListingToken":
+          await this.handleDisableListing(session, event);
           break;
-        case 'UpdateOrder':
-          await this.handleUpdateOrder(session, event);
+        case "Lock":
+          await this.handleLockToken(session, event);
           break;
-        case 'CancelOrder':
-          await this.handleCancelOrder(session, event);
-          break;
-        case 'RemoveOrder':
-          await this.handleRemoveOrder(session, event);
-          break;
-        case 'TokenReceived':
-          await this.handleTokenReceived(session, event);
-          break;
-
-        case 'Transfer':
-          await this.handleTransferEvent(session, event);
+        case "Claim":
+          await this.handleClaim(session, event);
           break;
 
         default:
@@ -80,225 +76,152 @@ export class DexSyncHandler extends SyncHandlerService {
     }
   }
 
-  private async handleTransferEvent(session: any, event: Web3EventType) {
-    const { transactionHash, address } = event;
-    const { value, from, to } = event.returnValues;
-    //console.log(event);
-    const historyTranfer = {
-      value,
-      from,
-      to,
-      contractAddress: address,
-      txHash: transactionHash,
-    };
+  private async handleConfigListing(session: any, event: Web3EventType) {
+    const { transactionHash: txhash, blockNumber } = event;
+    const { sender, token, startedAt, duration } = event.returnValues;
 
-    const doc = await this.TransferEventModel.create([historyTranfer as any], {
-      session,
+    let tokenData = await this.TokenModel.findOne({
+      token: token.toLowerCase(),
     });
 
-    const historyChange = [
-      { dbModelName: 'transferevents', before: null, after: doc },
-    ];
-    await this._saveEvent(event, historyChange, session);
-  }
+    if (!tokenData) {
+      const erc20Contract = crypto.erc20Contract(token);
 
-  private async handleTokenReceived(session: any, event: Web3EventType) {
-    const { _orderId, _amount } = event.returnValues;
+      const [symbol, name, decimals] = await Promise.all([
+        erc20Contract.symbol(),
+        erc20Contract.name(),
+        erc20Contract.decimals(),
+      ]);
 
-    const order = await this.DexOrderModel.findOne(
-      { orderId: _orderId },
-      {},
-      { session },
-    );
-
-    if (!order) {
-      console.log('xxxx orderId not found :', _orderId);
-      return;
+      tokenData = await this.TokenModel.findOneAndUpdate(
+        { token },
+        { symbol, name, decimals },
+        { session, upsert: true, new: true }
+      );
     }
 
-    const newReceived = toBigNumber(order.received.toString()).plus(
-      toBigNumber(crypto.fromWei(_amount)),
+    const { symbol, name, decimals } = tokenData;
+
+    const tax = await crypto.listingFactory().taxPercent(token);
+
+    await this.DexOrderModel.findOneAndUpdate(
+      { token },
+      { token, sender, txhash, tax: +tax, name, decimals, symbol },
+      { session, upsert: true }
     );
-    const param = {
-      orderId: _orderId,
-      data: {
-        received: Number(newReceived),
-      },
-      session,
-    };
-
-    await this._updateOrder(param);
-
-    const historyChange = [{ dbModelName: 'dexorders', before: { ...order } }];
-    await this._saveEvent(event, historyChange, session);
   }
 
-  private async handleRemoveOrder(session: any, event: Web3EventType) {
-    const { _orderId } = event.returnValues;
-
-    const order = await this.DexOrderModel.findOne(
-      { orderId: _orderId },
-      {},
-      { session },
+  private async handleDisableListing(session: any, event: Web3EventType) {
+    const { token } = event.returnValues;
+    const { transactionHash } = event;
+    await this.DexOrderModel.findOneAndUpdate(
+      { token },
+      { transactionHash, isDisable: true },
+      { session, upsert: true }
     );
-
-    if (!order) {
-      console.log('xxxx orderId not found :', _orderId);
-      return;
-    }
-
-    const param = {
-      orderId: _orderId,
-      data: {
-        amount: 0,
-        status: ORDER_STATUS.FILLED,
-        inOrder: false,
-      },
-      session,
-    };
-
-    await this._updateOrder(param);
-
-    const historyChange = [{ dbModelName: 'dexorders', before: { ...order } }];
-    await this._saveEvent(event, historyChange, session);
   }
 
-  private async handleCancelOrder(session: any, event: Web3EventType) {
-    const { _orderId } = event.returnValues;
-
-    const order = await this.DexOrderModel.findOne(
-      { orderId: _orderId },
-      {},
-      { session },
-    );
-
-    if (!order) {
-      console.log('xxxx orderId not found :', _orderId);
-      return;
-    }
-
-    const param = {
-      orderId: _orderId,
-      data: {
-        status: ORDER_STATUS.CANCELLED,
-        inOrder: false,
-      },
-      session,
-    };
-
-    await this._updateOrder(param);
-
-    const historyChange = [{ dbModelName: 'dexorders', before: { ...order } }];
-    await this._saveEvent(event, historyChange, session);
-  }
-
-  private async handleUpdateOrder(session: any, event: Web3EventType) {
-    const { _orderId, _amount } = event.returnValues;
-    const param: any = {
-      orderId: _orderId,
-      data: {
-        inOrder: true,
-      },
-      session,
-    };
-    param.data.amount = crypto.fromWei(_amount);
-
-    if (this.utilIsTinyAmount(param.data.amount)) {
-      param.data.amount = 0;
-      param.data.status = ORDER_STATUS.FILLED;
-      param.data.inOrder = false;
-    }
-
-    const order = await this.DexOrderModel.findOne(
-      { orderId: _orderId },
-      {},
-      { session },
-    );
-
-    if (!order) {
-      console.log('xxxx orderId not found :', _orderId);
-      return;
-    }
-
-    await this._updateOrder(param);
-
-    const historyChange = [{ dbModelName: 'dexorders', before: { ...order } }];
-    await this._saveEvent(event, historyChange, session);
-  }
-
-  private async _updateOrder(param) {
-    const { orderId, data, session } = param;
-    await this.DexOrderModel.updateOne({ orderId }, data, { session });
-  }
-
-  private utilIsTinyAmount(amount: any) {
-    return Number(amount) < 1e-8;
-  }
-
-  private async handleCreateOrder(session: any, event: Web3EventType) {
+  private async handleLockToken(session: any, event: Web3EventType) {
+    console.log('handleLockToken');
+    
+    const { lockId, owner, sender, lockData } = event.returnValues;
+    const { transactionHash: txhash } = event;
     const {
-      _orderId,
-      _book,
-      _owner,
-      _price,
-      _amount,
-      _createdAt,
-    } = event.returnValues;
-    // console.log('xxx create order', data);
-    const order = {
-      orderId: _orderId,
-      bookId: _book,
-      owner: _owner,
-      price: +crypto.fromWei(_price),
-      amount: +crypto.fromWei(_amount),
-      total: +crypto.fromWei(_amount),
-      status: ORDER_STATUS.ACTIVE,
-      received: 0,
-      inOrder: true,
-      orderType: getOrderType(_book),
-      createdAt: dateFromNumber(_createdAt),
-    };
-    const _order = await this.DexOrderModel.findOne(
-      {
-        orderId: _orderId,
-      },
-      {},
-      { session },
-    );
-    if (_order) {
-      return;
+      token,
+      startedAt,
+      claimStartedAt,
+      claimPeriod,
+      amount,
+      duration,
+    } = lockData;
+
+    let tokenData;
+    if (!tokenData) {
+      const erc20Contract = crypto.erc20Contract(token);
+
+      const [symbol, name, decimals] = await Promise.all([
+        erc20Contract.symbol(),
+        erc20Contract.name(),
+        erc20Contract.decimals(),
+      ]);
+
+      tokenData = await this.TokenModel.findOneAndUpdate(
+        { token },
+        { symbol, name, decimals },
+        { session, upsert: true, new: true }
+      );
     }
 
-    const doc = await this.DexOrderModel.create([order as any], { session });
+    const { symbol, name, decimals } = tokenData;
+    const claimableAmount = await crypto.tokenLocker().claimableAmount(lockId);
 
-    const historyChange = [
-      { dbModelName: 'dexorders', before: null, after: doc },
-    ];
-    await this._saveEvent(event, historyChange, session);
+    await this.LockModel.create(
+      [
+        {
+          owner,
+          sender,
+          lockId,
+          token,
+          symbol,
+          name,
+          amount,
+          startedAt,
+          claimPeriod,
+          claimStartedAt,
+          claimableAmount,
+          decimals,
+          txhash,
+          duration
+        } as any,
+      ],
+      { session }
+    );
   }
 
-  private async handleMatching(session: any, event: Web3EventType) {
-    const {
-      _sellBook,
-      _buyBook,
-      _price,
-      _amount,
-      _orderType,
-      _createdAt,
-    } = event.returnValues;
-    const matching = {
-      sellBook: _sellBook,
-      buyBook: _buyBook,
-      price: crypto.fromWei(_price),
-      amount: crypto.fromWei(_amount),
-      orderType: _orderType,
-      createdAt: dateFromNumber(_createdAt),
-    };
+  private async handleClaim(session: any, event: Web3EventType) {
+    const { amount:claimAmount, owner, updatedLockData } = event.returnValues
+    const { token, startedAt, claimStartedAt, claimPeriod, duration ,sender} = updatedLockData
+    const { transactionHash:txhash } = event
 
-    const doc = await this.DexMatchingModel.create([matching], { session });
-    const historyChange = [
-      { dbModelName: 'dexmatchings', before: null, after: doc },
-    ];
-    await this._saveEvent(event, historyChange, session);
+    let tokenData;
+    if (!tokenData) {
+      const erc20Contract = crypto.erc20Contract(token);
+
+      const [symbol, name, decimals] = await Promise.all([
+        erc20Contract.symbol(),
+        erc20Contract.name(),
+        erc20Contract.decimals(),
+      ]);
+
+      tokenData = await this.TokenModel.findOneAndUpdate(
+        { token },
+        { symbol, name, decimals },
+        { session, upsert: true, new: true }
+      );
+    }
+
+    const { symbol, name, decimals } = tokenData;
+
+    await this.ClaimHistoryModel.create(
+      [
+        {
+          owner,
+          sender,
+          token,
+          symbol,
+          name,
+          startedAt,
+          claimPeriod,
+          claimStartedAt,
+          claimAmount,
+          decimals,
+          txhash,
+          duration
+        } as any,
+      ],
+      { session }
+    );
+
   }
+
 }

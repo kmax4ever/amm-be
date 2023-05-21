@@ -4,7 +4,12 @@ import * as timestamps from "mongoose-timestamp";
 @index({ token: 1 })
 @index({ sender: 1 })
 @plugin(timestamps)
-export class Listing {
+export class ClaimHistory {
+  @prop({ lowercase: true })
+  lockId?: string;
+
+  @prop({ required: true, lowercase: true })
+  owner: string;
   @prop({ required: true, lowercase: true })
   sender: string;
 
@@ -31,6 +36,14 @@ export class Listing {
   @prop({ lowercase: true })
   txhash: string;
 
-  @prop({ default: false })
-  isDisable: boolean;
+  @prop()
+  claimStartedAt: number;
+
+  @prop()
+  claimPeriod: number;
+
+  @prop()
+  amount: string;
+  @prop()
+  claimAmount: string;
 }

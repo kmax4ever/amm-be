@@ -8,14 +8,13 @@ import { AmmService } from './amm.service';
 import { DexSyncHandler } from './ammSyncHandler.service';
 import { DexMatching } from './models/dexMatching.entity';
 import { TransferEvent } from './models/transferEvent.entity';
-import { DexOrder } from './models/dexOrder.entity';
+import { Listing } from './models/dexOrder.entity';
 import { BalanceLog } from './models/balanceLog.entity';
 import { User } from './models/user.entity'
 import { CoreModule } from 'src/core/core.module';
 
 @Module({
   imports: [
-   
     CoreModule
   ],
   exports: [TypegooseModule],

@@ -11,10 +11,12 @@ import { Event } from 'src/models/event.entity';
 import {Block} from 'src/models/block.entity'
 import {SyncStatus} from 'src/models/syncStatus.entity'
 import {DexMatching} from 'src/modules/amm/models/dexMatching.entity'
-import {DexOrder} from 'src/modules/amm/models/dexOrder.entity'
+import {Listing} from 'src/modules/amm/models/dexOrder.entity'
 import {TransferEvent} from 'src/modules/amm/models/transferEvent.entity'
 import {BalanceLog} from 'src/modules/amm/models/balanceLog.entity'
-import {User} from 'src/modules/amm/models/user.entity'
+import {Token} from 'src/modules/amm/models/token.entity'
+import {Lock} from "src/modules/amm/models/Lock.entity"
+import {ClaimHistory} from "src/modules/amm/models/claimHistory.entity"
 @Module({
   imports: [
     CacheModule.register({
@@ -31,10 +33,12 @@ import {User} from 'src/modules/amm/models/user.entity'
       Block,
       SyncStatus,
       DexMatching,
-      DexOrder,
+      Listing,
       TransferEvent,
       BalanceLog,
-      User
+      Token,
+      Lock,
+      ClaimHistory
     ]),
   ],
   controllers: [CoreController],
