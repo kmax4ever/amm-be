@@ -3,6 +3,7 @@ import * as timestamps from "mongoose-timestamp";
 
 @index({ token: 1 })
 @index({ sender: 1 })
+@index({ startedAt: 1, endedAt: 1, nextTimeUpdateTaxAtSec: 1 })
 @plugin(timestamps)
 export class Listing {
   @prop({ required: true, lowercase: true })
@@ -24,6 +25,8 @@ export class Listing {
 
   @prop()
   startedAt: number;
+  @prop()
+  endedAt: number;
 
   @prop()
   duration: number;
@@ -33,4 +36,7 @@ export class Listing {
 
   @prop({ default: false })
   isDisable: boolean;
+
+  @prop({ default: 0 })
+  nextTimeUpdateTaxAtSec: number;
 }

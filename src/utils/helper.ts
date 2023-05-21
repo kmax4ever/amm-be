@@ -1,4 +1,4 @@
-const BigNumber = require('bignumber.js');
+const BigNumber = require("bignumber.js");
 export const dateFromNumber = (value: string) => {
   return new Date(Number(`${value}000`));
 };
@@ -25,4 +25,12 @@ export const pagingFormat = ({ list, total, skip, limit }) => {
   };
 
   return rs;
+};
+
+export const waitMs = (msDuration: number) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(null);
+    }, msDuration);
+  });
 };

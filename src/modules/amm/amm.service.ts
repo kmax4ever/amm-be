@@ -3,11 +3,9 @@ import { DocumentType, ReturnModelType } from '@typegoose/typegoose';
 import { Request } from 'express';
 import { InjectModel } from 'nestjs-typegoose';
 import { DexMatching } from './models/dexMatching.entity';
-import { Listing } from './models/dexOrder.entity';
+import { Listing } from './models/Listing.entity';
 import { TransferEvent } from './models/transferEvent.entity';
 import { BalanceLog } from './models/balanceLog.entity';
-import { User } from './models/user.entity';
-import {set,get} from 'src/utils/memoryCache'
 import { pagingFormat,getYesterday } from 'src/utils/helper';
 
 
@@ -25,13 +23,18 @@ export class AmmService {
 
     @InjectModel(BalanceLog)
     public readonly BalanceLogModel: ReturnModelType<typeof BalanceLog>,
-    @InjectModel(User)
-    public readonly userModel: ReturnModelType<
-      typeof User>,
+
 
   ) {
 
   }
+
+
+
+
+
+
+
 
 
 }

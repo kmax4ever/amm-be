@@ -5,10 +5,8 @@ import { Web3EventType } from "src/core/syncCore.service";
 import { SyncHandlerService } from "src/core/syncHandler.service";
 import { Event } from "src/models/event.entity";
 import { DexMatching } from "./models/dexMatching.entity";
-import { Listing } from "./models/dexOrder.entity";
+import { Listing } from "./models/Listing.entity";
 import crypto from "src/utils/crypto";
-import { dateFromNumber, toBigNumber } from "src/utils/helper";
-import { ORDER_STATUS } from "config/constants";
 import { CONTRACT_SYNC } from "./config/dexConfig";
 import { TransferEvent } from "./models/transferEvent.entity";
 import { Token } from "./models/token.entity";
@@ -25,7 +23,7 @@ export class DexSyncHandler extends SyncHandlerService {
     @InjectModel(DexMatching)
     public readonly DexMatchingModel: ReturnModelType<typeof DexMatching>,
     @InjectModel(Listing)
-    public readonly DexOrderModel: ReturnModelType<typeof Listing>,
+    public readonly ListingModel: ReturnModelType<typeof Listing>,
     @InjectModel(TransferEvent)
     public readonly TransferEventModel: ReturnModelType<typeof TransferEvent>,
     @InjectModel(Token)
@@ -43,14 +41,14 @@ export class DexSyncHandler extends SyncHandlerService {
   public async initDb() {
     try {
       await this.DexMatchingModel.createCollection();
-      await this.DexOrderModel.createCollection();
+      await this.ListingModel.createCollection();
       await this.TransferEventModel.createCollection();
     } catch (err) {}
   }
 
   public async onResetVersion() {
     await this.DexMatchingModel.deleteMany({});
-    await this.DexOrderModel.deleteMany({});
+    await this.ListingModel.deleteMany({});
     await this.TransferEventModel.deleteMany({});
   }
 
@@ -69,7 +67,6 @@ export class DexSyncHandler extends SyncHandlerService {
         case "Claim":
           await this.handleClaim(session, event);
           break;
-
         default:
           break;
       }
@@ -104,9 +101,21 @@ export class DexSyncHandler extends SyncHandlerService {
 
     const tax = await crypto.listingFactory().taxPercent(token);
 
-    await this.DexOrderModel.findOneAndUpdate(
+    await this.ListingModel.findOneAndUpdate(
       { token },
-      { token, sender, txhash, tax: +tax, name, decimals, symbol },
+      {
+        token,
+        sender,
+        txhash,
+        tax: +tax,
+        name,
+        decimals,
+        symbol,
+        startedAt,
+        duration,
+        endedAt: Number(startedAt) + Number(duration),
+        nextTimeUpdateTaxAtSec: new Date().getTime() / 1000,
+      },
       { session, upsert: true }
     );
   }
@@ -114,7 +123,7 @@ export class DexSyncHandler extends SyncHandlerService {
   private async handleDisableListing(session: any, event: Web3EventType) {
     const { token } = event.returnValues;
     const { transactionHash } = event;
-    await this.DexOrderModel.findOneAndUpdate(
+    await this.ListingModel.findOneAndUpdate(
       { token },
       { transactionHash, isDisable: true },
       { session, upsert: true }
@@ -122,8 +131,6 @@ export class DexSyncHandler extends SyncHandlerService {
   }
 
   private async handleLockToken(session: any, event: Web3EventType) {
-    console.log('handleLockToken');
-    
     const { lockId, owner, sender, lockData } = event.returnValues;
     const { transactionHash: txhash } = event;
     const {
@@ -171,7 +178,7 @@ export class DexSyncHandler extends SyncHandlerService {
           claimableAmount,
           decimals,
           txhash,
-          duration
+          duration,
         } as any,
       ],
       { session }
@@ -179,9 +186,16 @@ export class DexSyncHandler extends SyncHandlerService {
   }
 
   private async handleClaim(session: any, event: Web3EventType) {
-    const { amount:claimAmount, owner, updatedLockData } = event.returnValues
-    const { token, startedAt, claimStartedAt, claimPeriod, duration ,sender} = updatedLockData
-    const { transactionHash:txhash } = event
+    const { amount: claimAmount, owner, updatedLockData } = event.returnValues;
+    const {
+      token,
+      startedAt,
+      claimStartedAt,
+      claimPeriod,
+      duration,
+      sender,
+    } = updatedLockData;
+    const { transactionHash: txhash } = event;
 
     let tokenData;
     if (!tokenData) {
@@ -216,12 +230,10 @@ export class DexSyncHandler extends SyncHandlerService {
           claimAmount,
           decimals,
           txhash,
-          duration
+          duration,
         } as any,
       ],
       { session }
     );
-
   }
-
 }

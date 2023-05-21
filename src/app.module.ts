@@ -6,6 +6,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { CoreModule } from './core/core.module';
 import { LoggerModule } from './core/logger/logger.module';
 import { ScheduleModule } from '@nestjs/schedule'
+import { AmmModule } from 'src/modules/amm/amm.module';
 export const dbConnection = mongoose.createConnection(config.mongo.uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -25,6 +26,7 @@ export const dbConnection = mongoose.createConnection(config.mongo.uri, {
       useCreateIndex: true,
     }),
     CoreModule,
+    AmmModule
   ],
 })
 export class AppModule {
