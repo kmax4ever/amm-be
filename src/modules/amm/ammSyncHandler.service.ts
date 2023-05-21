@@ -31,7 +31,7 @@ export class DexSyncHandler extends SyncHandlerService {
   ) {
     super(EventModel);
     this.contracts = CONTRACT_SYNC();
-    this.moduleName = 'Dex';
+    this.moduleName = 'Amm';
   }
 
   public async initDb() {

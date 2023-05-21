@@ -3,30 +3,23 @@ import { TypegooseModule } from 'nestjs-typegoose';
 import { Block } from 'src/models/block.entity';
 import { Event } from 'src/models/event.entity';
 import { SyncStatus } from 'src/models/syncStatus.entity';
-import { DexController } from './dex.controller';
-import { DexService } from './dex.service';
-import { DexSyncHandler } from './dexSyncHandler.service';
+import { AmmController } from './amm.controller';
+import { AmmService } from './amm.service';
+import { DexSyncHandler } from './ammSyncHandler.service';
 import { DexMatching } from './models/dexMatching.entity';
 import { TransferEvent } from './models/transferEvent.entity';
 import { DexOrder } from './models/dexOrder.entity';
 import { BalanceLog } from './models/balanceLog.entity';
 import { User } from './models/user.entity'
+import { CoreModule } from 'src/core/core.module';
 
 @Module({
   imports: [
-    TypegooseModule.forFeature([
-      Event,
-      Block,
-      SyncStatus,
-      DexMatching,
-      DexOrder,
-      TransferEvent,
-      BalanceLog,
-      User
-    ]),
+   
+    CoreModule
   ],
-  exports: [TypegooseModule, DexSyncHandler],
-  controllers: [DexController],
-  providers: [DexService, DexSyncHandler],
+  exports: [TypegooseModule],
+  controllers: [AmmController],
+  providers: [AmmService],
 })
-export class DexModule { }
+export class AmmModule { }

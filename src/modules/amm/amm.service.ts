@@ -14,7 +14,7 @@ import { pagingFormat,getYesterday } from 'src/utils/helper';
 
 
 @Injectable()
-export class DexService {
+export class AmmService {
   constructor(
     @InjectModel(DexMatching)
     public readonly DexMatchingModel: ReturnModelType<typeof DexMatching>,
