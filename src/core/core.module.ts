@@ -17,6 +17,7 @@ import { Token } from "src/modules/amm/models/token.entity";
 import { Lock } from "src/modules/amm/models/Lock.entity";
 import { ClaimHistory } from "src/modules/amm/models/claimHistory.entity";
 import { UtilService } from "./utils.service";
+import { PreSaleList } from "src/modules/amm/models/PresaleList.entity";
 @Module({
   imports: [
     CacheModule.register({
@@ -39,6 +40,7 @@ import { UtilService } from "./utils.service";
       Token,
       Lock,
       ClaimHistory,
+      PreSaleList
     ]),
   ],
   controllers: [CoreController],

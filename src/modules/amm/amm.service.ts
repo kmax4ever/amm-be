@@ -9,6 +9,7 @@ import { BalanceLog } from "./models/balanceLog.entity";
 import { pagingFormat, getYesterday } from "src/utils/helper";
 import { ClaimHistory } from "./models/claimHistory.entity";
 import { Lock } from "./models/Lock.entity";
+import { PreSaleList } from "./models/PresaleList.entity";
 
 @Injectable()
 export class AmmService {
@@ -19,7 +20,9 @@ export class AmmService {
     public readonly LockModel: ReturnModelType<typeof Lock>,
 
     @InjectModel(ClaimHistory)
-    public readonly ClaimHistoryModel: ReturnModelType<typeof ClaimHistory>
+    public readonly ClaimHistoryModel: ReturnModelType<typeof ClaimHistory>,
+    @InjectModel(PreSaleList)
+    public readonly PreSaleListModel: ReturnModelType<typeof PreSaleList>
   ) {}
 
   async listings(params) {
@@ -108,6 +111,36 @@ export class AmmService {
         owner: owner.toLowerCase(),
       }).lean(),
       this.LockModel.find({ owner: owner.toLowerCase() })
+        .sort({ _id: -1 })
+        .limit(limit)
+        .skip(startIndex)
+        .lean(),
+    ]);
+
+    return pagingFormat({ list: docs, total, skip, limit });
+  }
+
+  async presaleList(params) {
+    const page = params.page ? parseInt(params.page) : 1;
+    const limit =
+      parseInt(params.limit) > 10 || !params.limit
+        ? 10
+        : parseInt(params.limit);
+    const skip = parseInt(params.skip);
+    const startIndex = isNaN(+params.skip) ? (page - 1) * limit : skip;
+
+    const owner = params.owner ? params.owner.toLowerCase() : "";
+    const presale = params.presale ? params.presale.toLowerCase() : "";
+
+    if (!owner && !presale) {
+      return pagingFormat({ list: [], total: 0, skip, limit });
+    }
+
+    const findObj = owner ? { owner } : { presale };
+
+    const [total, docs] = await Promise.all([
+      this.PreSaleListModel.countDocuments(findObj).lean(),
+      this.PreSaleListModel.find(findObj)
         .sort({ _id: -1 })
         .limit(limit)
         .skip(startIndex)

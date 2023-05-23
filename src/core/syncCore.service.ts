@@ -1,17 +1,20 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { ReturnModelType } from '@typegoose/typegoose';
-import config from 'config/config';
-import { ObjectID } from 'mongodb';
-import { InjectModel } from 'nestjs-typegoose';
-import { dbConnection } from 'src/app.module';
-import { Block } from 'src/models/block.entity';
-import { Event } from 'src/models/event.entity';
-import { SyncStatus } from 'src/models/syncStatus.entity';
-import { DexSyncHandler } from 'src/modules/amm/ammSyncHandler.service';
-import { Listing } from 'src/modules/amm/models/Listing.entity';
-import { SyncHandlerService } from './syncHandler.service';
-const Web3 = require('web3');
+import { forwardRef, Inject, Injectable } from "@nestjs/common";
+import { ReturnModelType } from "@typegoose/typegoose";
+import config from "config/config";
+import { ObjectID } from "mongodb";
+import { InjectModel } from "nestjs-typegoose";
+import { dbConnection } from "src/app.module";
+import { Block } from "src/models/block.entity";
+import { Event } from "src/models/event.entity";
+import { SyncStatus } from "src/models/syncStatus.entity";
+import { DexSyncHandler } from "src/modules/amm/ammSyncHandler.service";
+import { Listing } from "src/modules/amm/models/Listing.entity";
+import { SyncHandlerService } from "./syncHandler.service";
+import { PreSaleList } from "src/modules/amm/models/PresaleList.entity";
+const Web3 = require("web3");
 export const web3Default = new Web3(config.rpcEndpoint);
+
+export var PRESALE_LIST_SYNC = [];
 
 export interface Web3EventType {
   event: string;
@@ -57,7 +60,6 @@ export class SyncCoreService {
   constructor(
     // ==== modules =====
 
-
     @Inject(forwardRef(() => DexSyncHandler))
     private readonly dexSyncHandler: DexSyncHandler,
     // =================
@@ -70,10 +72,12 @@ export class SyncCoreService {
     public readonly SyncStatusModel: ReturnModelType<typeof SyncStatus>,
     @InjectModel(Listing)
     public readonly DexOrderModel: ReturnModelType<typeof Listing>,
+    @InjectModel(PreSaleList)
+    public readonly PreSaleListModel: ReturnModelType<typeof PreSaleList>
   ) {
     this.modules = [dexSyncHandler];
 
-    if (config.isSync=== "true") {
+    if (config.isSync === "true") {
       this.start();
     }
   }
@@ -81,13 +85,13 @@ export class SyncCoreService {
   async initSetup() {
     try {
       await this.SyncStatusModel.createCollection();
-    } catch (err) { }
+    } catch (err) {}
     try {
       await this.BlockModel.createCollection();
-    } catch (err) { }
+    } catch (err) {}
     try {
       await this.EventModel.createCollection();
-    } catch (err) { }
+    } catch (err) {}
 
     for (const module of this.modules) {
       await module.initDb();
@@ -113,6 +117,17 @@ export class SyncCoreService {
     } else {
       this.lastBlockSynced = this.inititalBlockNum;
     }
+
+    const preSales = await this.PreSaleListModel.find(
+      {},
+      { presale: 1 }
+    ).lean();
+    if (preSales.length > 0) {
+      for (const i of preSales) {
+        const { presale } = i;
+        PRESALE_LIST_SYNC.push(presale);
+      }
+    }
   }
 
   public async initDb() {
@@ -123,7 +138,6 @@ export class SyncCoreService {
   async start() {
     console.log(`initializing...`);
     await this.initSetup();
-  
 
     console.log(`Starting sync...`);
     const loopFunc = async () => {
@@ -160,7 +174,7 @@ export class SyncCoreService {
       ) {
         fromBlock = this.lastBlockSynced + 1 - this.folkCheckRange;
       }
-      
+
       if (fromBlock > toBlock) {
         return;
       }
@@ -168,10 +182,15 @@ export class SyncCoreService {
       session = await dbConnection.startSession();
       await session.startTransaction();
       let isHaveFolk = false;
-     
+
       console.log(`get events from block ${fromBlock} to block ${toBlock}`);
-      
-      const logs = await this.collectLogs(fromBlock, toBlock);
+      console.log({ PRESALE_LIST_SYNC });
+
+      const logs = await this.collectLogs(
+        fromBlock,
+        toBlock,
+        PRESALE_LIST_SYNC as any
+      );
 
       logs.sort((a: Web3LogType, b: Web3LogType) => {
         if (a.blockNumber === b.blockNumber) {
@@ -186,7 +205,7 @@ export class SyncCoreService {
         await this._revertFolk(fromBlock, this.lastBlockSynced, session);
       } else {
         const newLogs = logs.filter(
-          event => event.blockNumber > this.lastBlockSynced,
+          (event) => event.blockNumber > this.lastBlockSynced
         );
 
         await this._saveBlock(logs, session);
@@ -207,7 +226,7 @@ export class SyncCoreService {
             new: true,
             upsert: true,
             session: session,
-          },
+          }
         );
         await session.commitTransaction();
         session.endSession();
@@ -223,7 +242,7 @@ export class SyncCoreService {
             new: true,
             upsert: true,
             session: session,
-          },
+          }
         );
         await session.commitTransaction();
         session.endSession();
@@ -259,20 +278,20 @@ export class SyncCoreService {
       const events = await this.EventModel.find(
         { blockNumber: blockNum },
         {},
-        { session },
+        { session }
       ).sort({ createdAt: -1 });
       for (const event of events) {
         await this.EventModel.deleteOne({ _id: event._id }, { session });
         for (const history of event.changeHistory) {
           const collection = await dbConnection.db.collection(
-            history.dbModelName,
+            history.dbModelName
           );
           if (!history.before) {
             await collection.deleteOne(
               {
                 _id: new ObjectID(history.after._id),
               },
-              { session },
+              { session }
             );
           } else {
             const update = {
@@ -289,7 +308,7 @@ export class SyncCoreService {
                   ...update,
                 },
               },
-              { session },
+              { session }
             );
           }
         }
@@ -300,15 +319,16 @@ export class SyncCoreService {
   async collectLogs(
     fromBlock: number,
     toBlock: number,
+    address?: []
   ): Promise<Web3LogType[]> {
     const addresses = [];
     for (const module of this.modules) {
-     
-        for (const contract of module.contracts) {
-          addresses.push(contract.address);
-        }
-      
+      for (const contract of module.contracts) {
+        addresses.push(contract.address);
+      }
     }
+
+    addresses.push(...address);
     const logs: Web3LogType[] = await web3Default.eth.getPastLogs({
       address: addresses,
       fromBlock,
@@ -334,7 +354,7 @@ export class SyncCoreService {
       const block = await this.BlockModel.findOne(
         { blockNumber },
         {},
-        { session },
+        { session }
       );
       if (block) {
         return;

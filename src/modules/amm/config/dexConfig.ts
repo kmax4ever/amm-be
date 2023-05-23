@@ -2,10 +2,14 @@ import * as dexContract from "../contracts/Dex.json";
 import * as wrappedTokenContract from "../contracts/WrappedToken.json";
 import * as ListingJson from "../contracts/ListingFactory.json";
 import * as TokenLockerJson from "../contracts/TokenLocker.json";
+import * as PresaleFactoryJson from "../contracts/PresaleFactory.json";
+import * as PresaleJson from "../contracts/Presale.json";
 
 export const ADDRESS_SETTINGS = {
   LISTING_FACTORY: process.env.LISTING_FACTORY,
   TOKEN_LOCKER: process.env.TOKEN_LOCKER,
+
+  PRESALE_FACTORY: process.env.PRESALE_FACTORY,
 };
 
 export const ADDRESS_SYNC = [
@@ -14,8 +18,6 @@ export const ADDRESS_SYNC = [
   ADDRESS_SETTINGS.LISTING_FACTORY,
 ];
 
-
-
 export const CONTRACT_SYNC = () => {
   const CONTRACT_SYNC = [
     {
@@ -23,9 +25,11 @@ export const CONTRACT_SYNC = () => {
       address: ADDRESS_SETTINGS.LISTING_FACTORY,
     },
     { abi: TokenLockerJson.abi, address: ADDRESS_SETTINGS.TOKEN_LOCKER },
+    { abi: PresaleFactoryJson.abi, address: ADDRESS_SETTINGS.PRESALE_FACTORY },
   ];
 
-  for (let address of ADDRESS_SYNC) { //token
+  for (let address of ADDRESS_SYNC) {
+    //token
     // CONTRACT_SYNC.push({
     //   abi: wrappedTokenContract.abi,
     //   address
@@ -35,7 +39,4 @@ export const CONTRACT_SYNC = () => {
   return CONTRACT_SYNC;
 };
 
-export const TOKEN_ADDRESSES = [
-
-];
-
+export const TOKEN_ADDRESSES = [];

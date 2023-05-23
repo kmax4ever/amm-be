@@ -53,4 +53,11 @@ export class AmmController {
     const rs = await this.ammService.claimHistory(req.query);
     return rs;
   }
+
+  @Get("presales")
+  @UseInterceptors(CacheInterceptor)
+  async presales(@Req() req) {
+    const rs = await this.ammService.presaleList(req.query);
+    return rs;
+  }
 }

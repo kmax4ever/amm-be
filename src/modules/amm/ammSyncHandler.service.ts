@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { InjectModel } from "nestjs-typegoose";
-import { Web3EventType } from "src/core/syncCore.service";
+import { Web3EventType, PRESALE_LIST_SYNC } from "src/core/syncCore.service";
 import { SyncHandlerService } from "src/core/syncHandler.service";
 import { Event } from "src/models/event.entity";
 import { DexMatching } from "./models/dexMatching.entity";
@@ -12,6 +12,7 @@ import { TransferEvent } from "./models/transferEvent.entity";
 import { Token } from "./models/token.entity";
 import { Lock } from "./models/Lock.entity";
 import { ClaimHistory } from "./models/claimHistory.entity";
+import { PreSaleList } from "./models/PresaleList.entity";
 
 @Injectable()
 export class DexSyncHandler extends SyncHandlerService {
@@ -31,7 +32,9 @@ export class DexSyncHandler extends SyncHandlerService {
     @InjectModel(Lock)
     public readonly LockModel: ReturnModelType<typeof Lock>,
     @InjectModel(ClaimHistory)
-    public readonly ClaimHistoryModel: ReturnModelType<typeof ClaimHistory>
+    public readonly ClaimHistoryModel: ReturnModelType<typeof ClaimHistory>,
+    @InjectModel(PreSaleList)
+    public readonly PreSaleListModel: ReturnModelType<typeof PreSaleList>
   ) {
     super(EventModel);
     this.contracts = CONTRACT_SYNC();
@@ -67,10 +70,74 @@ export class DexSyncHandler extends SyncHandlerService {
         case "Claim":
           await this.handleClaim(session, event);
           break;
+        case "CreatePresale":
+          await this._handleCreatePresale(session, event);
+          break;
         default:
           break;
       }
     }
+  }
+
+  private async _handleCreatePresale(session, event) {
+    console.log(`_handleCreatePresale`);
+    const { blockNumber, txhash: transactionHash } = event;
+
+    const {
+      token,
+      currency,
+      owner,
+      presale,
+      liqClaimStartedAt,
+      liqClaimPeriod,
+      liqLockDuration,
+    } = event.returnValues;
+
+    const [tokenData, currencyData] = await Promise.all([
+      this._tokenData(token, session),
+      this._tokenData(currency, session),
+    ]);
+
+    const block = await web3Default.eth.getBlock(blockNumber);
+    PRESALE_LIST_SYNC.push(presale);
+
+    await this.PreSaleListModel.create(
+      [
+        {
+          token: tokenData,
+          currency: currencyData,
+          txhash: transactionHash,
+          owner,
+          presale,
+          liqClaimStartedAt,
+          liqClaimPeriod,
+          liqLockDuration,
+          timestamp: block.timestamp,
+        } as any,
+      ],
+      { session }
+    );
+  }
+
+  private async _tokenData(address: string, session) {
+    let tokenData = await this.TokenModel.findOne({ token: address }).lean();
+    if (!tokenData) {
+      const erc20Contract = crypto.erc20Contract(address);
+
+      const [symbol, name, decimals] = await Promise.all([
+        erc20Contract.symbol(),
+        erc20Contract.name(),
+        erc20Contract.decimals(),
+      ]);
+
+      tokenData = await this.TokenModel.findOneAndUpdate(
+        { token: address },
+        { symbol, name, decimals },
+        { session, upsert: true, new: true }
+      ).lean();
+    }
+
+    return { address, ...tokenData };
   }
 
   private async handleConfigListing(session: any, event: Web3EventType) {
