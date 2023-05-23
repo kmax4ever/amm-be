@@ -6,6 +6,7 @@ import {
   CacheInterceptor,
   CacheTTL,
   UseInterceptors,
+  Res,
 } from "@nestjs/common";
 import { json, Request } from "express";
 import { MyLogger } from "src/core/logger/logger.service";
@@ -15,6 +16,7 @@ import { InjectModel } from "nestjs-typegoose";
 import { DocumentType, ReturnModelType } from "@typegoose/typegoose";
 import { get, set } from "../../utils/memoryCache";
 import { getParam } from "../../utils/getParam";
+const path = require("path");
 @Controller("amm")
 export class AmmController {
   constructor(
@@ -59,5 +61,20 @@ export class AmmController {
   async presales(@Req() req) {
     const rs = await this.ammService.presaleList(req.query);
     return rs;
+  }
+
+  @Get("token_by_presale")
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(30)
+  async tokenByPresale(@Req() req) {
+    const rs = await this.ammService.tokenByPresale(req.query);
+    return rs;
+  }
+
+  @Get("file_import")
+  async file_import(@Req() req, @Res() res) {
+    var fileLocation = path.join("./", "WhiteList.xlsx");
+    console.log(fileLocation);
+    res.download(fileLocation);
   }
 }

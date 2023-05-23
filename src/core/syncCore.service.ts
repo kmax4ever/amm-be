@@ -11,10 +11,11 @@ import { DexSyncHandler } from "src/modules/amm/ammSyncHandler.service";
 import { Listing } from "src/modules/amm/models/Listing.entity";
 import { SyncHandlerService } from "./syncHandler.service";
 import { PreSaleList } from "src/modules/amm/models/PresaleList.entity";
+import { ADDRESS_SYNC } from "src/modules/amm/config/dexConfig";
 const Web3 = require("web3");
 export const web3Default = new Web3(config.rpcEndpoint);
 
-export var PRESALE_LIST_SYNC = [];
+export var contractNeedSync = [];
 
 export interface Web3EventType {
   event: string;
@@ -118,15 +119,16 @@ export class SyncCoreService {
       this.lastBlockSynced = this.inititalBlockNum;
     }
 
+    contractNeedSync = ADDRESS_SYNC;
+
     const preSales = await this.PreSaleListModel.find(
       {},
       { presale: 1 }
     ).lean();
+
     if (preSales.length > 0) {
-      for (const i of preSales) {
-        const { presale } = i;
-        PRESALE_LIST_SYNC.push(presale);
-      }
+      const presaleAddress = preSales.map((i) => i.presale);
+      contractNeedSync.push(...presaleAddress);
     }
   }
 
@@ -184,12 +186,12 @@ export class SyncCoreService {
       let isHaveFolk = false;
 
       console.log(`get events from block ${fromBlock} to block ${toBlock}`);
-      console.log({ PRESALE_LIST_SYNC });
+      console.log({ PRESALE_LIST_SYNC: contractNeedSync });
 
       const logs = await this.collectLogs(
         fromBlock,
         toBlock,
-        PRESALE_LIST_SYNC as any
+        contractNeedSync as any
       );
 
       logs.sort((a: Web3LogType, b: Web3LogType) => {
@@ -319,18 +321,10 @@ export class SyncCoreService {
   async collectLogs(
     fromBlock: number,
     toBlock: number,
-    address?: []
+    filterAddresss?: []
   ): Promise<Web3LogType[]> {
-    const addresses = [];
-    for (const module of this.modules) {
-      for (const contract of module.contracts) {
-        addresses.push(contract.address);
-      }
-    }
-
-    addresses.push(...address);
     const logs: Web3LogType[] = await web3Default.eth.getPastLogs({
-      address: addresses,
+      address: filterAddresss,
       fromBlock,
       toBlock,
     });

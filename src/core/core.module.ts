@@ -18,6 +18,7 @@ import { Lock } from "src/modules/amm/models/Lock.entity";
 import { ClaimHistory } from "src/modules/amm/models/claimHistory.entity";
 import { UtilService } from "./utils.service";
 import { PreSaleList } from "src/modules/amm/models/PresaleList.entity";
+import { WhiteList } from "src/modules/amm/models/WhiteList.entity";
 @Module({
   imports: [
     CacheModule.register({
@@ -40,7 +41,8 @@ import { PreSaleList } from "src/modules/amm/models/PresaleList.entity";
       Token,
       Lock,
       ClaimHistory,
-      PreSaleList
+      PreSaleList,
+      WhiteList,
     ]),
   ],
   controllers: [CoreController],

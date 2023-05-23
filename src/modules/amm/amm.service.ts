@@ -149,4 +149,14 @@ export class AmmService {
 
     return pagingFormat({ list: docs, total, skip, limit });
   }
+
+  async tokenByPresale(params) {
+    const { presale } = params;
+    if (!presale) {
+      return null;
+    }
+
+    const presaleData = await this.PreSaleListModel.findOne({ presale }).lean();
+    return presaleData;
+  }
 }

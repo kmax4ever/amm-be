@@ -21,6 +21,12 @@ export class PreSaleList {
   @prop({ required: true, unique: true, lowercase: true })
   presale: string;
 
+  @prop({ lowercase: true })
+  liqLocker?: string;
+
+  @prop({ lowercase: true })
+  buyLocker?: string;
+
   @prop({ required: true, lowercase: true })
   owner: string;
   @prop({ required: true })
@@ -43,4 +49,29 @@ export class PreSaleList {
 
   @prop()
   txhash: string;
+
+  @prop()
+  price?: string;
+  @prop()
+  minTokenBuyA?: string;
+
+  @prop()
+  buyClaimStartedAt?: number;
+
+  @prop()
+  buyClaimPeriod?: number;
+
+  @prop()
+  buyLockDuration?: number;
+
+  @prop()
+  startedAt?: number;
+
+  @prop()
+  endAtdAt?: number;
+
+  @prop()
+  totalSold?: string;
+
 }
+

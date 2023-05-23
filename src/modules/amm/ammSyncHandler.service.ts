@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { InjectModel } from "nestjs-typegoose";
-import { Web3EventType, PRESALE_LIST_SYNC } from "src/core/syncCore.service";
+import { Web3EventType, contractNeedSync } from "src/core/syncCore.service";
 import { SyncHandlerService } from "src/core/syncHandler.service";
 import { Event } from "src/models/event.entity";
 import { DexMatching } from "./models/dexMatching.entity";
@@ -13,6 +13,7 @@ import { Token } from "./models/token.entity";
 import { Lock } from "./models/Lock.entity";
 import { ClaimHistory } from "./models/claimHistory.entity";
 import { PreSaleList } from "./models/PresaleList.entity";
+import { WhiteList } from "./models/WhiteList.entity";
 
 @Injectable()
 export class DexSyncHandler extends SyncHandlerService {
@@ -34,7 +35,9 @@ export class DexSyncHandler extends SyncHandlerService {
     @InjectModel(ClaimHistory)
     public readonly ClaimHistoryModel: ReturnModelType<typeof ClaimHistory>,
     @InjectModel(PreSaleList)
-    public readonly PreSaleListModel: ReturnModelType<typeof PreSaleList>
+    public readonly PreSaleListModel: ReturnModelType<typeof PreSaleList>,
+    @InjectModel(WhiteList)
+    public readonly WhiteListModel: ReturnModelType<typeof WhiteList>
   ) {
     super(EventModel);
     this.contracts = CONTRACT_SYNC();
@@ -73,15 +76,126 @@ export class DexSyncHandler extends SyncHandlerService {
         case "CreatePresale":
           await this._handleCreatePresale(session, event);
           break;
+
+        case "ConfigLiqLock":
+          await this._handleConfigLiqLock(session, event);
+          break;
+        case "ConfigBuyLock":
+          await this._handleConfigBuyLock(session, event);
+          break;
+        case "SetTokenPrice":
+          await this._handleSetTokenPrice(session, event);
+          break;
+
+        case "SetMinTokenBuyA":
+          await this._handleSetMinTokenBuyA(session, event);
+          break;
+
+        case "SetMaxBuyOf": // white list
+          await this._handleSetMaxBuyOf(session, event);
+          break;
+
+        case "Buy":
+          break;
+
         default:
           break;
       }
     }
   }
 
+  private async _handleSetMaxBuyOf(session, event) {
+    const { blockNumber, transactionHash: txhash, address: presale } = event;
+    const { invester, amount } = event.returnValues;
+
+    await this.WhiteListModel.findOneAndUpdate(
+      { presale, invester },
+      { amount },
+      { session, upsert: true }
+    );
+  }
+
+  private async _handleSetTokenPrice(session, event) {
+    const { blockNumber, transactionHash: txhash, address: presale } = event;
+    const { price } = event.returnValues;
+
+    await this.PreSaleListModel.findOneAndUpdate(
+      {
+        presale: presale.toLowerCase(),
+      },
+      {
+        price,
+      },
+      {
+        session,
+      }
+    );
+  }
+
+  private async _handleSetMinTokenBuyA(session, event) {
+    const { blockNumber, transactionHash: txhash, address: presale } = event;
+    const { minTokenBuyA } = event.returnValues;
+
+    await this.PreSaleListModel.findOneAndUpdate(
+      {
+        presale: presale.toLowerCase(),
+      },
+      {
+        minTokenBuyA,
+      },
+      {
+        session,
+      }
+    );
+  }
+
+  private async _handleConfigLiqLock(session, event) {
+    const { blockNumber, transactionHash: txhash, address: presale } = event;
+    const { liqLocker } = event.returnValues;
+
+    await this.PreSaleListModel.findOneAndUpdate(
+      {
+        presale: presale.toLowerCase(),
+      },
+      {
+        liqLocker,
+      },
+      {
+        session,
+      }
+    );
+  }
+
+  private async _handleConfigBuyLock(session, event) {
+    console.log(`_handleConfigBuyLock`);
+
+    const { blockNumber, transactionHash: txhash, address: presale } = event;
+    const {
+      buyLocker,
+      buyClaimStartedAt,
+      buyClaimPeriod,
+      buyLockDuration,
+    } = event.returnValues;
+
+    await this.PreSaleListModel.findOneAndUpdate(
+      {
+        presale: presale.toLowerCase(),
+      },
+      {
+        buyLocker,
+        buyClaimStartedAt,
+        buyClaimPeriod,
+        buyLockDuration,
+      },
+      {
+        session,
+      }
+    );
+  }
+
   private async _handleCreatePresale(session, event) {
     console.log(`_handleCreatePresale`);
-    const { blockNumber, txhash: transactionHash } = event;
+    const { blockNumber, transactionHash } = event;
 
     const {
       token,
@@ -99,7 +213,7 @@ export class DexSyncHandler extends SyncHandlerService {
     ]);
 
     const block = await web3Default.eth.getBlock(blockNumber);
-    PRESALE_LIST_SYNC.push(presale);
+    contractNeedSync.push(presale);
 
     await this.PreSaleListModel.create(
       [
