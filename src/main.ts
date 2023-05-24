@@ -19,7 +19,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
   app.use(compression());
-  app.use("/images", express.static(join("images")));
+  app.use("/static", express.static(join("static")));
   //app.enableCors()
 
   await app.listen(process.env.PORT || 3000);

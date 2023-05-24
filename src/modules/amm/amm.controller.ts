@@ -73,7 +73,7 @@ export class AmmController {
 
   @Get("file_import")
   async file_import(@Req() req, @Res() res) {
-    var fileLocation = path.join("./", "WhiteList.xlsx");
+    var fileLocation = path.join("/static/", "WhiteList.xlsx");
     console.log(fileLocation);
     res.download(fileLocation);
   }
