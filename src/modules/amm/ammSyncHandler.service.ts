@@ -90,18 +90,22 @@ export class DexSyncHandler extends SyncHandlerService {
         case "SetMinTokenBuyA":
           await this._handleSetMinTokenBuyA(session, event);
           break;
-
         case "SetMaxBuyOf": // white list
           await this._handleSetMaxBuyOf(session, event);
           break;
-
         case "Buy":
+          await this._handleBuy(session, event);
           break;
 
         default:
           break;
       }
     }
+  }
+
+  private async _handleBuy(session, event) {
+    console.log({ event });
+
   }
 
   private async _handleSetMaxBuyOf(session, event) {
@@ -213,13 +217,14 @@ export class DexSyncHandler extends SyncHandlerService {
     ]);
 
     const block = await web3Default.eth.getBlock(blockNumber);
+
     contractNeedSync.push(presale);
 
     await this.PreSaleListModel.create(
       [
         {
-          token: tokenData,
-          currency: currencyData,
+          token: JSON.parse(JSON.stringify(tokenData)),
+          currency: JSON.parse(JSON.stringify(currencyData)),
           txhash: transactionHash,
           owner,
           presale,
@@ -251,6 +256,7 @@ export class DexSyncHandler extends SyncHandlerService {
       ).lean();
     }
 
+    delete tokenData._id;
     return { address, ...tokenData };
   }
 

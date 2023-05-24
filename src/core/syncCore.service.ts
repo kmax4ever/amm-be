@@ -152,7 +152,7 @@ export class SyncCoreService {
   async sync() {
     let session;
     try {
-      const lastestBlock = (await this.getlastestBlockFromRpc()) - 5;
+      const lastestBlock = (await this.getlastestBlockFromRpc()) ;
       if (lastestBlock <= 0) {
         console.log(`[ERROR] Cannot get newest block`);
         return;

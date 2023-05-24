@@ -77,4 +77,18 @@ export class AmmController {
     console.log(fileLocation);
     res.download(fileLocation);
   }
+
+  @Get("presale_whitelist")
+  @UseInterceptors(CacheInterceptor)
+  async presaleWhiteList(@Req() req) {
+    const rs = await this.ammService.whiteList(req.query);
+    return rs;
+  }
+
+  @Get("presale_active")
+  @UseInterceptors(CacheInterceptor)
+  async presaleActive(@Req() req) {
+    const rs = await this.ammService.presaleActive(req.query);
+    return rs;
+  }
 }

@@ -13,6 +13,9 @@ class Token {
 
   @prop({ required: true })
   symbol: string;
+
+  @prop({ required: true })
+  token: string;
 }
 
 @index({ presaleAddress: 1 })
@@ -72,6 +75,4 @@ export class PreSaleList {
 
   @prop()
   totalSold?: string;
-
 }
-

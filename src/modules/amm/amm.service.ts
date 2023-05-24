@@ -10,6 +10,7 @@ import { pagingFormat, getYesterday } from "src/utils/helper";
 import { ClaimHistory } from "./models/claimHistory.entity";
 import { Lock } from "./models/Lock.entity";
 import { PreSaleList } from "./models/PresaleList.entity";
+import { WhiteList } from "./models/WhiteList.entity";
 
 @Injectable()
 export class AmmService {
@@ -22,7 +23,9 @@ export class AmmService {
     @InjectModel(ClaimHistory)
     public readonly ClaimHistoryModel: ReturnModelType<typeof ClaimHistory>,
     @InjectModel(PreSaleList)
-    public readonly PreSaleListModel: ReturnModelType<typeof PreSaleList>
+    public readonly PreSaleListModel: ReturnModelType<typeof PreSaleList>,
+    @InjectModel(WhiteList)
+    public readonly WhiteListModel: ReturnModelType<typeof WhiteList>
   ) {}
 
   async listings(params) {
@@ -158,5 +161,67 @@ export class AmmService {
 
     const presaleData = await this.PreSaleListModel.findOne({ presale }).lean();
     return presaleData;
+  }
+
+  async whiteList(params) {
+    const page = params.page ? parseInt(params.page) : 1;
+    const limit =
+      parseInt(params.limit) > 10 || !params.limit
+        ? 10
+        : parseInt(params.limit);
+    const skip = parseInt(params.skip);
+    const startIndex = isNaN(+params.skip) ? (page - 1) * limit : skip;
+
+    const presale = params.presale ? params.presale.toLowerCase() : "";
+
+    if (!presale) {
+      return pagingFormat({ list: [], total: 0, skip, limit });
+    }
+
+    const findObj = { presale };
+
+    const [total, docs] = await Promise.all([
+      this.WhiteListModel.countDocuments(findObj).lean(),
+      this.WhiteListModel.find(findObj)
+        .sort({ _id: -1 })
+        .limit(limit)
+        .skip(startIndex)
+        .lean(),
+    ]);
+
+    return pagingFormat({ list: docs, total, skip, limit });
+  }
+
+  async presaleActive(params) {
+    const page = params.page ? parseInt(params.page) : 1;
+    const limit =
+      parseInt(params.limit) > 10 || !params.limit
+        ? 10
+        : parseInt(params.limit);
+    const skip = parseInt(params.skip);
+    const startIndex = isNaN(+params.skip) ? (page - 1) * limit : skip;
+
+    const invester = params.invester ? params.invester.toLowerCase() : "";
+
+    if (!invester) {
+      return pagingFormat({ list: [], total: 0, skip, limit });
+    }
+
+    const presaleList = await this.WhiteListModel.find({ invester }).lean();
+
+    const presales = presaleList.map((i) => i.presale);
+
+    const findObj = { presale: { $in: presales } };
+
+    const [total, docs] = await Promise.all([
+      this.PreSaleListModel.countDocuments(findObj).lean(),
+      this.PreSaleListModel.find(findObj)
+        .sort({ _id: -1 })
+        .limit(limit)
+        .skip(startIndex)
+        .lean(),
+    ]);
+
+    return pagingFormat({ list: docs, total, skip, limit });
   }
 }
