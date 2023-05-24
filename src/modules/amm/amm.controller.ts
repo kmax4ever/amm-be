@@ -73,9 +73,29 @@ export class AmmController {
 
   @Get("file_import")
   async file_import(@Req() req, @Res() res) {
-    var fileLocation = path.join(`./`, "WhiteList.xlsx");
-    console.log(fileLocation);
-    res.download(fileLocation);
+    var Excel = require("exceljs");
+    var workbook = new Excel.Workbook();
+    var worksheet = workbook.addWorksheet("WhiteList");
+    worksheet.columns = [
+      { header: "address", key: "address", width: 50 },
+      { header: "amount", key: "amount", width: 32 },
+    ];
+
+    worksheet.addRow({ address: "0xxxxxxxx", amount: 1000 });
+    worksheet.addRow({ address: "0xxxxxxxx", amount: 1000 });
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=" + "template_import.xlsx"
+    );
+    workbook.xlsx.write(res).then(function(data) {
+      res.end();
+      console.log("File write done........");
+    });
   }
 
   @Get("presale_whitelist")
