@@ -63,6 +63,13 @@ export class AmmController {
     return rs;
   }
 
+  @Get("presale")
+  @UseInterceptors(CacheInterceptor)
+  async presale(@Req() req) {
+    const rs = await this.ammService.presaleData(req.query);
+    return rs;
+  }
+
   @Get("token_by_presale")
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(30)

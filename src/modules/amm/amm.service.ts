@@ -224,4 +224,27 @@ export class AmmService {
 
     return pagingFormat({ list: docs, total, skip, limit });
   }
+
+  async presaleData(params) {
+    const presale = params.presale ? params.presale.toLowerCase() : "";
+    const invester = params.invester ? params.invester.toLowerCase() : "";
+    if (!presale) {
+      return;
+    }
+
+    const [presaleItem, whiteListData] = await Promise.all([
+      this.PreSaleListModel.findOne({ presale }).lean(),
+      this.WhiteListModel.findOne({ presale, invester }).lean(),
+    ]);
+
+    if (!presaleItem) {
+      return null;
+    }
+
+    if (invester) {
+      presaleItem[`inWhiteList`] = whiteListData ? true : false;
+    }
+
+    return presaleItem;
+  }
 }
