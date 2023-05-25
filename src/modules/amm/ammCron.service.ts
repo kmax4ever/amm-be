@@ -1,15 +1,16 @@
 import { Injectable, BadRequestException } from "@nestjs/common";
 import { DocumentType, ReturnModelType } from "@typegoose/typegoose";
-import { Request } from "express";
 import { InjectModel } from "nestjs-typegoose";
 import { DexMatching } from "./models/dexMatching.entity";
 import { TransferEvent } from "./models/transferEvent.entity";
 import { BalanceLog } from "./models/balanceLog.entity";
-import { User } from "./models/user.entity";
-import { pagingFormat, getYesterday, waitMs } from "src/utils/helper";
+import { waitMs } from "src/utils/helper";
 import crypto from "../../utils/crypto";
 import { Listing } from "./models/Listing.entity";
 import { UtilService } from "src/core/utils.service";
+import { Cron } from "@nestjs/schedule";
+import { getData } from "src/utils/crawlData";
+import { Statistic } from "./models/Statistic.entity";
 
 @Injectable()
 export class AmmCronService {
@@ -27,6 +28,8 @@ export class AmmCronService {
     public readonly BalanceLogModel: ReturnModelType<typeof BalanceLog>,
     @InjectModel(Listing)
     public readonly ListingModel: ReturnModelType<typeof Listing>,
+    @InjectModel(Statistic)
+    public readonly StatisticModel: ReturnModelType<typeof Statistic>,
     private readonly utilService: UtilService
   ) {
     this.start();
@@ -40,6 +43,27 @@ export class AmmCronService {
       process.nextTick(loopFuncTaxListing);
     };
     loopFuncTaxListing();
+  }
+
+  // @Cron("* 1 * * *") //every hourd
+
+  @Cron("* * * * *") //every minute
+  async cronCrawlTokenData() {
+    await this.crawlTokenData();
+  }
+
+  async crawlTokenData() {
+    console.log("xx crawlTokenData");
+
+    const data = await getData();
+    console.log("xxx data", data);
+    if (data) {
+      await this.StatisticModel.findOneAndUpdate(
+        {},
+        { tokenData: data },
+        { upsert: true }
+      );
+    }
   }
 
   async processUpdateTax() {

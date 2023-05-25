@@ -118,4 +118,12 @@ export class AmmController {
     const rs = await this.ammService.presaleActive(req.query);
     return rs;
   }
+
+  @Get("dashboard")
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(600)
+  async dashboard(@Req() req) {
+    const rs = await this.ammService.dashboard();
+    return rs;
+  }
 }

@@ -11,6 +11,7 @@ import { ClaimHistory } from "./models/claimHistory.entity";
 import { Lock } from "./models/Lock.entity";
 import { PreSaleList } from "./models/PresaleList.entity";
 import { WhiteList } from "./models/WhiteList.entity";
+import { Statistic } from "src/modules/amm/models/Statistic.entity";
 
 @Injectable()
 export class AmmService {
@@ -25,7 +26,9 @@ export class AmmService {
     @InjectModel(PreSaleList)
     public readonly PreSaleListModel: ReturnModelType<typeof PreSaleList>,
     @InjectModel(WhiteList)
-    public readonly WhiteListModel: ReturnModelType<typeof WhiteList>
+    public readonly WhiteListModel: ReturnModelType<typeof WhiteList>,
+    @InjectModel(Statistic)
+    public readonly StatisticModel: ReturnModelType<typeof Statistic>
   ) {}
 
   async listings(params) {
@@ -246,5 +249,10 @@ export class AmmService {
     }
 
     return presaleItem;
+  }
+
+  async dashboard() {
+    const statistic = await this.StatisticModel.findOne({}).lean();
+    return statistic;
   }
 }

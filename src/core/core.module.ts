@@ -19,6 +19,7 @@ import { ClaimHistory } from "src/modules/amm/models/claimHistory.entity";
 import { UtilService } from "./utils.service";
 import { PreSaleList } from "src/modules/amm/models/PresaleList.entity";
 import { WhiteList } from "src/modules/amm/models/WhiteList.entity";
+import { Statistic } from "src/modules/amm/models/Statistic.entity";
 @Module({
   imports: [
     CacheModule.register({
@@ -43,6 +44,7 @@ import { WhiteList } from "src/modules/amm/models/WhiteList.entity";
       ClaimHistory,
       PreSaleList,
       WhiteList,
+      Statistic,
     ]),
   ],
   controllers: [CoreController],
