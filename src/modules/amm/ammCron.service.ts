@@ -45,9 +45,8 @@ export class AmmCronService {
     loopFuncTaxListing();
   }
 
-  // @Cron("* 1 * * *") //every hourd
-
-  @Cron("* * * * *") //every minute
+  //@Cron("* * * * *") //every minute
+  @Cron("* 1 * * *") //every hour
   async cronCrawlTokenData() {
     await this.crawlTokenData();
   }
