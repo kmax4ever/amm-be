@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
+import { Injectable, BadRequestException, Param } from "@nestjs/common";
 import { DocumentType, ReturnModelType } from "@typegoose/typegoose";
 import { Request } from "express";
 import { InjectModel } from "nestjs-typegoose";
@@ -12,6 +12,9 @@ import { Lock } from "./models/Lock.entity";
 import { PreSaleList } from "./models/PresaleList.entity";
 import { WhiteList } from "./models/WhiteList.entity";
 import { Statistic } from "src/modules/amm/models/Statistic.entity";
+import { Referrer } from "./models/Referrer.enttiy";
+import { Swap } from "./models/Swap.enttiy";
+import { count } from "console";
 
 @Injectable()
 export class AmmService {
@@ -28,7 +31,11 @@ export class AmmService {
     @InjectModel(WhiteList)
     public readonly WhiteListModel: ReturnModelType<typeof WhiteList>,
     @InjectModel(Statistic)
-    public readonly StatisticModel: ReturnModelType<typeof Statistic>
+    public readonly StatisticModel: ReturnModelType<typeof Statistic>,
+    @InjectModel(Referrer)
+    public readonly ReferrerModel: ReturnModelType<typeof Referrer>,
+    @InjectModel(Swap)
+    public readonly SwapModel: ReturnModelType<typeof Swap>
   ) {}
 
   async listings(params) {
@@ -254,5 +261,52 @@ export class AmmService {
   async dashboard() {
     const statistic = await this.StatisticModel.findOne({}).lean();
     return statistic;
+  }
+
+  async refStatistic(params) {
+    const { referrer } = params;
+
+    const now = new Date().getTime() / 1000;
+
+    const time24hAgo = now - 24 * 60 * 60;
+    const time7day = now - 7 * 24 * 60 * 60;
+
+    const volume = async (childs = [], time = 0) => {
+      const datas = await this.SwapModel.aggregate([
+        {
+          $match: {
+            sender: { $in: childs },
+            timestamp: { $gte: time },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            volume: { $sum: "$volumeUSD" },
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+
+      const rs = {
+        count: datas[0]?.count ? datas[0].count : 0,
+        volumeUSD: datas[0]?.volume ? datas[0].volume : 0,
+      };
+      return rs;
+    };
+
+    const referrers = await this.ReferrerModel.find({
+      referrer: referrer.toLowerCase(),
+    }).lean();
+
+    const refCount = referrers.length;
+
+    const childs = referrers.map((i) => i.child) as any;
+    const [volume24hData, volume7dData] = await Promise.all([
+      volume(childs, time24hAgo),
+      volume(childs, time7day),
+    ]);
+
+    return { refCount, volume24hData, volume7dData };
   }
 }

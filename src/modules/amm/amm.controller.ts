@@ -126,4 +126,12 @@ export class AmmController {
     const rs = await this.ammService.dashboard();
     return rs;
   }
+
+  @Get("ref_statistic")
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(600)
+  async ref_statistic(@Req() req) {
+    const rs = await this.ammService.refStatistic(req.query);
+    return rs;
+  }
 }

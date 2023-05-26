@@ -1,22 +1,29 @@
-import axios from 'axios';
-import { web3Default } from 'src/core/syncCore.service';
-import crypto from './crypto';
-import { logger } from './log'
-const CoinGecko = require('coingecko-api');
+import axios from "axios";
+import { web3Default } from "src/core/syncCore.service";
+import crypto from "./crypto";
+import { logger } from "./log";
+const CoinGecko = require("coingecko-api");
 
 const CoinGeckoClient = new CoinGecko();
 
-export const callApi = async (url: string) => {
+export const callApi = async (url: string, method, cmc_api_key?, data?) => {
   try {
+    let headers;
+    if (cmc_api_key) {
+      headers = { "X-CMC_PRO_API_KEY": cmc_api_key };
+    }
+
     const rs = await axios({
-      method: 'get',
+      method: method,
       url: url,
-      timeout: 5000
+      timeout: 5000,
+      headers,
+      data,
     });
+
     return rs;
   } catch (error) {
     //console.log(error);
-    logger.error(error)
     return null;
   }
 };

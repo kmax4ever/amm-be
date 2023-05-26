@@ -14,6 +14,9 @@ import { Lock } from "./models/Lock.entity";
 import { ClaimHistory } from "./models/claimHistory.entity";
 import { PreSaleList } from "./models/PresaleList.entity";
 import { WhiteList } from "./models/WhiteList.entity";
+import { Referrer } from "./models/Referrer.enttiy";
+import { Swap } from "./models/Swap.enttiy";
+import { getPriceUsdBySymbol } from "src/utils/getPrices";
 
 @Injectable()
 export class DexSyncHandler extends SyncHandlerService {
@@ -37,7 +40,11 @@ export class DexSyncHandler extends SyncHandlerService {
     @InjectModel(PreSaleList)
     public readonly PreSaleListModel: ReturnModelType<typeof PreSaleList>,
     @InjectModel(WhiteList)
-    public readonly WhiteListModel: ReturnModelType<typeof WhiteList>
+    public readonly WhiteListModel: ReturnModelType<typeof WhiteList>,
+    @InjectModel(Referrer)
+    public readonly ReferrerModel: ReturnModelType<typeof Referrer>,
+    @InjectModel(Swap)
+    public readonly SwapModel: ReturnModelType<typeof Swap>
   ) {
     super(EventModel);
     this.contracts = CONTRACT_SYNC();
@@ -97,15 +104,77 @@ export class DexSyncHandler extends SyncHandlerService {
           await this._handleBuy(session, event);
           break;
 
+        case "UpdateReferrer":
+          await this._handleUpdateReferrer(session, event);
+          break;
+
+        case "Swap":
+          await this._handleSwap(session, event);
+          break;
+
         default:
           break;
       }
     }
   }
 
-  private async _handleBuy(session, event) {
+  private async _handleSwap(session, event) {
+    // PZT
     console.log({ event });
+    const { blockNumber, transactionHash } = event;
+    const blockData = await web3Default.eth.getBlock(blockNumber);
+    const timestamp = blockData.timestamp;
+    // sender ===child
 
+    const {
+      sender,
+      to,
+      amount0In,
+      amount1In,
+      amount0Out,
+      amount1Out,
+    } = event.returnValues;
+
+    const ethUSD = await getPriceUsdBySymbol("ETH");
+
+    const ethAmount =
+      amount0In != "0"
+        ? +crypto.fromWei(amount0In)
+        : +crypto.fromWei(amount0Out);
+    const volumeUSD = ethAmount * ethUSD;
+    //
+    console.log({ volume: volumeUSD });
+
+    await this.SwapModel.create(
+      [
+        {
+          sender,
+          to,
+          amount0In,
+          amount1In,
+          amount0Out,
+          amount1Out,
+          ethUSD,
+          volumeUSD,
+          timestamp,
+        } as any,
+      ],
+      { session }
+    );
+  }
+
+  private async _handleUpdateReferrer(session, event) {
+    const { referrer, child } = event.returnValues;
+
+    await this.ReferrerModel.findOneAndUpdate(
+      { child: child.toLowerCase() },
+      { referrer, child },
+      { session, upsert: true }
+    );
+  }
+
+  private async _handleBuy(session, event) {
+    console.log("_handleBuy");
   }
 
   private async _handleSetMaxBuyOf(session, event) {

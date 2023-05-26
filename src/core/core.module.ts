@@ -20,6 +20,8 @@ import { UtilService } from "./utils.service";
 import { PreSaleList } from "src/modules/amm/models/PresaleList.entity";
 import { WhiteList } from "src/modules/amm/models/WhiteList.entity";
 import { Statistic } from "src/modules/amm/models/Statistic.entity";
+import { Referrer } from "src/modules/amm/models/Referrer.enttiy";
+import { Swap } from "src/modules/amm/models/Swap.enttiy";
 @Module({
   imports: [
     CacheModule.register({
@@ -45,6 +47,8 @@ import { Statistic } from "src/modules/amm/models/Statistic.entity";
       PreSaleList,
       WhiteList,
       Statistic,
+      Referrer,
+      Swap,
     ]),
   ],
   controllers: [CoreController],

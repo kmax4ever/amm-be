@@ -20,7 +20,7 @@ export const dbConnection = mongoose.createConnection(config.mongo.uri, {
     ScheduleModule.forRoot(),
     TypegooseModule.forRoot(config.mongo.uri, {
       db: dbConnection,
-      useNewUrlParser: false,
+      useNewUrlParser: true,
       useUnifiedTopology: true,
       useFindAndModify: false,
       useCreateIndex: true,
