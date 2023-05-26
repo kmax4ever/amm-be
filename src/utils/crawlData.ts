@@ -1,6 +1,6 @@
 const { firefox } = require("playwright");
 const link =
-  "https://www.dextools.io/app/en/arbitrum/pair-explorer/0xec465bc17c0790aa254d6135aa50fbda3c98d5c9";
+  "https://www.dextools.io/app/en/arbitrum/pair-explorer/0x400d7f19ca189762d7944a62ea351db8de54f571";
 
 const waitMs = (msDuration) => {
   return new Promise((resolve, reject) => {
