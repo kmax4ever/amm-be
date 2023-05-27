@@ -5,4 +5,6 @@ import * as timestamps from "mongoose-timestamp";
 export class Statistic {
   @prop({})
   tokenData: any;
+  @prop({})
+  volumeStatistic?: Array<any>;
 }
