@@ -309,4 +309,52 @@ export class AmmService {
 
     return { refCount, volume24hData, volume7dData };
   }
+
+  async volumeChilds(params) {
+    const { referrer } = params;
+
+    const now = new Date().getTime() / 1000;
+
+    const time30day = now - 30 * 24 * 60 * 60;
+
+    const referrers = await this.ReferrerModel.find({
+      referrer: referrer.toLowerCase(),
+    }).lean();
+
+    const childs = referrers.map((i) => i.child) as any;
+    const volumeChilds = await this.SwapModel.aggregate([
+      {
+        $match: {
+          // sender: { $in: childs }, TODO: REMOVE when deploy production
+          timestamp: { $gte: time30day },
+        },
+      },
+
+      {
+        $project: {
+          volumeUSD: 1,
+          timeSec: { $toDate: { $multiply: ["$timestamp", 1000] } },
+        },
+      },
+      {
+        $project: {
+          volumeUSD: 1,
+          date: { $toDate: "$timeSec" },
+          timeSec: 1,
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+          txCount: { $sum: 1 },
+          volumeUSD: { $sum: "$volumeUSD" },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]);
+
+    return volumeChilds;
+  }
 }

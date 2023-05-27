@@ -121,7 +121,7 @@ export class AmmController {
 
   @Get("dashboard")
   @UseInterceptors(CacheInterceptor)
-  @CacheTTL(600)
+  @CacheTTL(3600)
   async dashboard(@Req() req) {
     const rs = await this.ammService.dashboard();
     return rs;
@@ -129,9 +129,18 @@ export class AmmController {
 
   @Get("ref_statistic")
   @UseInterceptors(CacheInterceptor)
-  @CacheTTL(600)
+  @CacheTTL(3600)
   async ref_statistic(@Req() req) {
     const rs = await this.ammService.refStatistic(req.query);
+    return rs;
+  }
+
+
+  @Get("volume_childs")
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(3600)
+  async volume_childs(@Req() req) {
+    const rs = await this.ammService.volumeChilds(req.query);
     return rs;
   }
 }
