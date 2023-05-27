@@ -22,6 +22,7 @@ import { WhiteList } from "src/modules/amm/models/WhiteList.entity";
 import { Statistic } from "src/modules/amm/models/Statistic.entity";
 import { Referrer } from "src/modules/amm/models/Referrer.enttiy";
 import { Swap } from "src/modules/amm/models/Swap.enttiy";
+import { Pair } from "src/modules/amm/models/Pair.entity";
 @Module({
   imports: [
     CacheModule.register({
@@ -49,6 +50,7 @@ import { Swap } from "src/modules/amm/models/Swap.enttiy";
       Statistic,
       Referrer,
       Swap,
+      Pair,
     ]),
   ],
   controllers: [CoreController],

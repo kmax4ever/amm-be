@@ -14,7 +14,7 @@ import { WhiteList } from "./models/WhiteList.entity";
 import { Statistic } from "src/modules/amm/models/Statistic.entity";
 import { Referrer } from "./models/Referrer.enttiy";
 import { Swap } from "./models/Swap.enttiy";
-import { count } from "console";
+import { Pair } from "./models/Pair.entity";
 
 @Injectable()
 export class AmmService {
@@ -35,7 +35,9 @@ export class AmmService {
     @InjectModel(Referrer)
     public readonly ReferrerModel: ReturnModelType<typeof Referrer>,
     @InjectModel(Swap)
-    public readonly SwapModel: ReturnModelType<typeof Swap>
+    public readonly SwapModel: ReturnModelType<typeof Swap>,
+    @InjectModel(Pair)
+    public readonly PairModel: ReturnModelType<typeof Pair>
   ) {}
 
   async listings(params) {
@@ -356,5 +358,26 @@ export class AmmService {
     ]);
 
     return volumeChilds;
+  }
+
+  async pairs(params) {
+    const page = params.page ? parseInt(params.page) : 1;
+    const limit =
+      parseInt(params.limit) > 10 || !params.limit
+        ? 10
+        : parseInt(params.limit);
+    const skip = parseInt(params.skip);
+    const startIndex = isNaN(+params.skip) ? (page - 1) * limit : skip;
+
+    const [total, docs] = await Promise.all([
+      this.PairModel.countDocuments({}).lean(),
+      this.PairModel.find({})
+        .sort({ _id: -1 })
+        .limit(limit)
+        .skip(startIndex)
+        .lean(),
+    ]);
+
+    return pagingFormat({ list: docs, total, skip, limit });
   }
 }

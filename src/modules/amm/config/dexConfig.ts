@@ -6,6 +6,7 @@ import * as PresaleFactoryJson from "../contracts/PresaleFactory.json";
 import * as PresaleJson from "../contracts/Presale.json";
 import * as fairToken from "../contracts/FairLaunchToken.json";
 import * as PairJson from "../contracts/UniswapV2Pair.json";
+import * as FactoryJson from "../contracts/UniswapV2Factory.json";
 
 export const ADDRESS_SETTINGS = {
   LISTING_FACTORY: process.env.LISTING_FACTORY,
@@ -13,16 +14,16 @@ export const ADDRESS_SETTINGS = {
   PRESALE_FACTORY: process.env.PRESALE_FACTORY,
   PZT: `0xfb17d52f77db6e32b5a082ed4307fcfb0a86beee`,
   PAIR: `0x400d7f19ca189762d7944a62ea351db8de54f571`,
+  FACTORY: process.env.FACTORY,
 };
 
-export const ADDRESS_SYNC = [
-  // have to sync  !!!!!IMPORTANT
-  ADDRESS_SETTINGS.TOKEN_LOCKER,
-  ADDRESS_SETTINGS.LISTING_FACTORY,
-  ADDRESS_SETTINGS.PRESALE_FACTORY,
-  ADDRESS_SETTINGS.PZT,
-  ADDRESS_SETTINGS.PAIR,
-];
+var contractsNeedSync = [];
+
+for (const contract in ADDRESS_SETTINGS) {
+  contractsNeedSync.push(ADDRESS_SETTINGS[contract]);
+}
+
+export const ADDRESS_SYNC = contractsNeedSync;
 
 export const CONTRACT_SYNC = () => {
   const CONTRACT_SYNC = [
@@ -36,6 +37,7 @@ export const CONTRACT_SYNC = () => {
     { abi: PresaleJson.abi, address: "" },
     { abi: fairToken.abi, address: "" },
     { abi: PairJson.abi, address: "" },
+    { abi: FactoryJson.abi, address: "" },
   ];
 
   for (let address of ADDRESS_SYNC) {

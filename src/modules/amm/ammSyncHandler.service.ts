@@ -17,6 +17,7 @@ import { WhiteList } from "./models/WhiteList.entity";
 import { Referrer } from "./models/Referrer.enttiy";
 import { Swap } from "./models/Swap.enttiy";
 import { getPriceUsdBySymbol } from "src/utils/getPrices";
+import { Pair } from "./models/Pair.entity";
 
 @Injectable()
 export class DexSyncHandler extends SyncHandlerService {
@@ -44,7 +45,9 @@ export class DexSyncHandler extends SyncHandlerService {
     @InjectModel(Referrer)
     public readonly ReferrerModel: ReturnModelType<typeof Referrer>,
     @InjectModel(Swap)
-    public readonly SwapModel: ReturnModelType<typeof Swap>
+    public readonly SwapModel: ReturnModelType<typeof Swap>,
+    @InjectModel(Pair)
+    public readonly PairModel: ReturnModelType<typeof Pair>
   ) {
     super(EventModel);
     this.contracts = CONTRACT_SYNC();
@@ -111,6 +114,9 @@ export class DexSyncHandler extends SyncHandlerService {
         case "Swap":
           await this._handleSwap(session, event);
           break;
+        case "PairCreated":
+          await this._handlePairCreated(session, event);
+          break;
 
         default:
           break;
@@ -118,6 +124,30 @@ export class DexSyncHandler extends SyncHandlerService {
     }
   }
 
+  private async _handlePairCreated(session, event) {
+    console.log("xxx _handlePairCreated");
+
+    const { blockNumber, transactionHash } = event;
+    const blockData = await web3Default.eth.getBlock(blockNumber);
+    const timestamp = blockData.timestamp;
+    const { token0, token1, pair } = event.returnValues;
+
+    const [token0Data, token1Data] = await Promise.all([
+      this._tokenData(token0, session),
+      this._tokenData(token1, session),
+    ]);
+
+    const pairData = {
+      token0,
+      token1,
+      pair,
+      timestamp,
+      transactionHash,
+      token0Data,
+      token1Data,
+    };
+    await this.PairModel.create([pairData], { session });
+  }
   private async _handleSwap(session, event) {
     // PZT
     console.log({ event });

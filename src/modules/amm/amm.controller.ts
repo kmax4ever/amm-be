@@ -135,12 +135,19 @@ export class AmmController {
     return rs;
   }
 
-
   @Get("volume_childs")
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(3600)
   async volume_childs(@Req() req) {
     const rs = await this.ammService.volumeChilds(req.query);
+    return rs;
+  }
+
+  @Get("pairs")
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(3600)
+  async pairs(@Req() req) {
+    const rs = await this.ammService.pairs(req.query);
     return rs;
   }
 }
