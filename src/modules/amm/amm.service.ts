@@ -387,13 +387,10 @@ export class AmmService {
     const presale = await this.PreSaleListModel.findOne({
       "token.address": address.toLowerCase(),
     });
-    if(!presale)
-    {
+    if (!presale) {
       return false;
     }
 
     return true;
-
-
   }
 }
