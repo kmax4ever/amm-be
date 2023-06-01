@@ -393,4 +393,18 @@ export class AmmService {
 
     return { isPresale: true };
   }
+
+  async checkListing(params) {
+    const { token } = params;
+
+    const listing = await this.ListtingModel.findOne({
+      token: token.toLowerCase(),
+    });
+
+    if (!listing) {
+      return { isListing: false };
+    }
+
+    return { isListing: true };
+  }
 }
