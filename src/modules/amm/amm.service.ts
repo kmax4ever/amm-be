@@ -380,4 +380,20 @@ export class AmmService {
 
     return pagingFormat({ list: docs, total, skip, limit });
   }
+
+  async presaleValidate(params) {
+    const { address } = params;
+
+    const presale = await this.PreSaleListModel.findOne({
+      "token.address": address.toLowerCase(),
+    });
+    if(!presale)
+    {
+      return false;
+    }
+
+    return true;
+
+
+  }
 }

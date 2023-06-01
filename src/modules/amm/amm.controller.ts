@@ -150,4 +150,11 @@ export class AmmController {
     const rs = await this.ammService.pairs(req.query);
     return rs;
   }
+
+  @Get("presale_validate")
+  @UseInterceptors(CacheInterceptor)
+  async presaleValidate(@Req() req) {
+    const rs = await this.ammService.presaleValidate(req.query);
+    return rs;
+  }
 }
