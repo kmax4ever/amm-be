@@ -151,5 +151,15 @@ export class AmmController {
     return rs;
   }
 
+
+
+  @Get("presale_by_token")
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(30)
+  async presaleByToken(@Req() req) {
+    const rs = await this.ammService.presaleByToken(req.query);
+    return rs;
+  }
+
   
 }
