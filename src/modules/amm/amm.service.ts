@@ -388,9 +388,9 @@ export class AmmService {
       "token.address": address.toLowerCase(),
     });
     if (!presale) {
-      return false;
+      return { isPresale: false };
     }
 
-    return true;
+    return { isPresale: true };
   }
 }
