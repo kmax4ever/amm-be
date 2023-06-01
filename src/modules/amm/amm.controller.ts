@@ -151,17 +151,5 @@ export class AmmController {
     return rs;
   }
 
-  @Get("presale_validate")
-  @UseInterceptors(CacheInterceptor)
-  async presaleValidate(@Req() req) {
-    const rs = await this.ammService.presaleValidate(req.query);
-    return rs;
-  }
-
-  @Get("validate_listing")
-  @UseInterceptors(CacheInterceptor)
-  async validateListing(@Req() req) {
-    const rs = await this.ammService.checkListing(req.query);
-    return rs;
-  }
+  
 }

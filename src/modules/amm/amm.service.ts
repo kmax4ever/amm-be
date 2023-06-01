@@ -381,30 +381,5 @@ export class AmmService {
     return pagingFormat({ list: docs, total, skip, limit });
   }
 
-  async presaleValidate(params) {
-    const { address } = params;
-
-    const presale = await this.PreSaleListModel.findOne({
-      "token.address": address.toLowerCase(),
-    });
-    if (!presale) {
-      return { isPresale: false };
-    }
-
-    return { isPresale: true };
-  }
-
-  async checkListing(params) {
-    const { token } = params;
-
-    const listing = await this.ListtingModel.findOne({
-      token: token.toLowerCase(),
-    });
-
-    if (!listing) {
-      return { isListing: false };
-    }
-
-    return { isListing: true };
-  }
+  
 }
