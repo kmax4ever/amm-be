@@ -22,7 +22,7 @@ export const getData = async () => {
     const volume24h = texts[5];
     const pooledWETH = texts[6];
     const pooledPZT = texts[7];
-    const marketcap = texts[9];
+    const marketcap = texts[8];
     const totalSupply = texts[9];
     const holders = texts[10];
     const totalTx = texts[11];
