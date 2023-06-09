@@ -335,6 +335,7 @@ export class DexSyncHandler extends SyncHandlerService {
       ],
       { session }
     );
+    
   }
 
   private async _tokenData(address: string, session) {
