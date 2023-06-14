@@ -201,6 +201,12 @@ export class AmmService {
         .lean(),
     ]);
 
+    const presaleData = await this.PreSaleListModel.findOne({ presale }).lean();
+
+    for (const i of docs) {
+      i[`presaleData`] = presaleData;
+    }
+
     return pagingFormat({ list: docs, total, skip, limit });
   }
 
