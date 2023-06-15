@@ -296,8 +296,6 @@ export class AmmService {
         },
       ]);
 
-      console.log(datas);
-
       const rs = {
         count: datas[0]?.count ? datas[0].count : 0,
         volumeUSD: datas[0]?.volume ? datas[0].volume : 0,
