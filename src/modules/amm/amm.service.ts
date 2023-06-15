@@ -283,7 +283,7 @@ export class AmmService {
       const datas = await this.SwapModel.aggregate([
         {
           $match: {
-            sender: { $in: childs },
+            $or: [{ sender: { $in: childs } }, { to: { $in: childs } }],
             timestamp: { $gte: time },
           },
         },
@@ -295,6 +295,8 @@ export class AmmService {
           },
         },
       ]);
+
+      console.log(datas);
 
       const rs = {
         count: datas[0]?.count ? datas[0].count : 0,
@@ -310,6 +312,9 @@ export class AmmService {
     const refCount = referrers.length;
 
     const childs = referrers.map((i) => i.child) as any;
+
+    console.log({ childs });
+
     const [volume24hData, volume7dData] = await Promise.all([
       volume(childs, time24hAgo),
       volume(childs, time7day),

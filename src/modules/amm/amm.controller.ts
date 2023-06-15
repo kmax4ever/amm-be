@@ -16,7 +16,7 @@ import { InjectModel } from "nestjs-typegoose";
 import { DocumentType, ReturnModelType } from "@typegoose/typegoose";
 import { get, set } from "../../utils/memoryCache";
 import { getParam } from "../../utils/getParam";
-import {AmmCronService} from './ammCron.service'
+// import {AmmCronService} from './ammCron.service'
 const path = require("path");
 @Controller("amm")
 export class AmmController {
@@ -25,7 +25,7 @@ export class AmmController {
     public readonly DexMatchingModel: ReturnModelType<typeof DexMatching>,
     private readonly logger: MyLogger,
     private readonly ammService: AmmService,
-    private readonly cronService: AmmCronService
+    // private readonly cronService: AmmCronService
   ) {
     this.logger.setContext("AmmController");
   }
@@ -131,7 +131,7 @@ export class AmmController {
 
   @Get("ref_statistic")
   @UseInterceptors(CacheInterceptor)
-  @CacheTTL(3600)
+  @CacheTTL(10)
   async ref_statistic(@Req() req) {
     const rs = await this.ammService.refStatistic(req.query);
     return rs;
@@ -164,11 +164,11 @@ export class AmmController {
   }
 
 
-  @Get("trigger_call_cron")
-  @UseInterceptors(CacheInterceptor)
-  async trigger(@Req() req) {
-    await this.cronService.crawlTokenData();
-    return true;
-  }
+  // @Get("trigger_call_cron")
+  // @UseInterceptors(CacheInterceptor)
+  // async trigger(@Req() req) {
+  //   await this.cronService.crawlTokenData();
+  //   return true;
+  // }
   
 }
