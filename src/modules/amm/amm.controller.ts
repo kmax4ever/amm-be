@@ -24,9 +24,9 @@ export class AmmController {
     @InjectModel(DexMatching)
     public readonly DexMatchingModel: ReturnModelType<typeof DexMatching>,
     private readonly logger: MyLogger,
-    private readonly ammService: AmmService,
-    // private readonly cronService: AmmCronService
-  ) {
+    private readonly ammService: AmmService
+  ) // private readonly cronService: AmmCronService
+  {
     this.logger.setContext("AmmController");
   }
 
@@ -153,8 +153,6 @@ export class AmmController {
     return rs;
   }
 
-
-
   @Get("presale_by_token")
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(30)
@@ -163,6 +161,12 @@ export class AmmController {
     return rs;
   }
 
+  @Get("tokens")
+  @UseInterceptors(CacheInterceptor)
+  async tokens(@Req() req) {
+    const rs = await this.ammService.tokensCreator(req.query);
+    return rs;
+  }
 
   // @Get("trigger_call_cron")
   // @UseInterceptors(CacheInterceptor)
@@ -170,5 +174,4 @@ export class AmmController {
   //   await this.cronService.crawlTokenData();
   //   return true;
   // }
-  
 }

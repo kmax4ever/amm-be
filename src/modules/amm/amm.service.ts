@@ -15,6 +15,7 @@ import { Statistic } from "src/modules/amm/models/Statistic.entity";
 import { Referrer } from "./models/Referrer.enttiy";
 import { Swap } from "./models/Swap.enttiy";
 import { Pair } from "./models/Pair.entity";
+import { TokenCreator } from "./models/tokenCreator.entity";
 
 @Injectable()
 export class AmmService {
@@ -37,7 +38,9 @@ export class AmmService {
     @InjectModel(Swap)
     public readonly SwapModel: ReturnModelType<typeof Swap>,
     @InjectModel(Pair)
-    public readonly PairModel: ReturnModelType<typeof Pair>
+    public readonly PairModel: ReturnModelType<typeof Pair>,
+    @InjectModel(TokenCreator)
+    public readonly TokenCreatorModel: ReturnModelType<typeof TokenCreator>
   ) {}
 
   async listings(params) {
@@ -399,5 +402,30 @@ export class AmmService {
     }
 
     return { presale };
+  }
+
+  async tokensCreator(params) {
+    const page = params.page ? parseInt(params.page) : 1;
+    const limit =
+      parseInt(params.limit) > 10 || !params.limit
+        ? 10
+        : parseInt(params.limit);
+    const skip = parseInt(params.skip);
+    const startIndex = isNaN(+params.skip) ? (page - 1) * limit : skip;
+
+    const creator = params.creator ? params.creator : "";
+
+    const [total, docs] = await Promise.all([
+      this.TokenCreatorModel.countDocuments({
+        creator: creator.toLowerCase(),
+      }).lean(),
+      this.TokenCreatorModel.find({ creator: creator.toLowerCase() })
+        .sort({ _id: -1 })
+        .limit(limit)
+        .skip(startIndex)
+        .lean(),
+    ]);
+
+    return pagingFormat({ list: docs, total, skip, limit });
   }
 }

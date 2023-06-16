@@ -23,6 +23,7 @@ import { Statistic } from "src/modules/amm/models/Statistic.entity";
 import { Referrer } from "src/modules/amm/models/Referrer.enttiy";
 import { Swap } from "src/modules/amm/models/Swap.enttiy";
 import { Pair } from "src/modules/amm/models/Pair.entity";
+import { TokenCreator } from "src/modules/amm/models/tokenCreator.entity";
 @Module({
   imports: [
     CacheModule.register({
@@ -51,6 +52,7 @@ import { Pair } from "src/modules/amm/models/Pair.entity";
       Referrer,
       Swap,
       Pair,
+      TokenCreator,
     ]),
   ],
   controllers: [CoreController],

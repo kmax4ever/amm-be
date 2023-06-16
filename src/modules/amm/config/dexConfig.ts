@@ -7,6 +7,7 @@ import * as PresaleJson from "../contracts/Presale.json";
 import * as fairToken from "../contracts/FairLaunchToken.json";
 import * as PairJson from "../contracts/UniswapV2Pair.json";
 import * as FactoryJson from "../contracts/UniswapV2Factory.json";
+import * as TokenEmitter from "../contracts/TokenEmitter.json";
 
 export const ADDRESS_SETTINGS = {
   LISTING_FACTORY: process.env.LISTING_FACTORY,
@@ -15,6 +16,7 @@ export const ADDRESS_SETTINGS = {
   PZT: `0xfb17d52f77db6e32b5a082ed4307fcfb0a86beee`,
   PAIR: `0x400d7f19ca189762d7944a62ea351db8de54f571`,
   FACTORY: process.env.FACTORY,
+  TOKEN_EMITTER: process.env.TOKEN_EMITTER,
 };
 
 var contractsNeedSync = [];
@@ -38,6 +40,7 @@ export const CONTRACT_SYNC = () => {
     { abi: fairToken.abi, address: "" },
     { abi: PairJson.abi, address: "" },
     { abi: FactoryJson.abi, address: "" },
+    { abi: TokenEmitter.abi, address: "" },
   ];
 
   for (let address of ADDRESS_SYNC) {

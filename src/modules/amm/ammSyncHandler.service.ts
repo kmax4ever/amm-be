@@ -18,6 +18,7 @@ import { Referrer } from "./models/Referrer.enttiy";
 import { Swap } from "./models/Swap.enttiy";
 import { getPriceUsdBySymbol } from "src/utils/getPrices";
 import { Pair } from "./models/Pair.entity";
+import { TokenCreator } from "./models/tokenCreator.entity";
 
 @Injectable()
 export class DexSyncHandler extends SyncHandlerService {
@@ -47,7 +48,9 @@ export class DexSyncHandler extends SyncHandlerService {
     @InjectModel(Swap)
     public readonly SwapModel: ReturnModelType<typeof Swap>,
     @InjectModel(Pair)
-    public readonly PairModel: ReturnModelType<typeof Pair>
+    public readonly PairModel: ReturnModelType<typeof Pair>,
+    @InjectModel(TokenCreator)
+    public readonly TokenCreatorModel: ReturnModelType<typeof TokenCreator>
   ) {
     super(EventModel);
     this.contracts = CONTRACT_SYNC();
@@ -117,11 +120,39 @@ export class DexSyncHandler extends SyncHandlerService {
         case "PairCreated":
           await this._handlePairCreated(session, event);
           break;
+        case "TokenDeclared":
+          await this.handleTokenDeclare(session, event);
+          break;
 
         default:
           break;
       }
     }
+  }
+
+  private async handleTokenDeclare(session, event) {
+    const { blockNumber, transactionHash: txHash } = event;
+    const blockData = await web3Default.eth.getBlock(blockNumber);
+    const timestamp = blockData.timestamp;
+
+    const { token, creator } = event.returnValues;
+    const tokenData = await this._tokenData(token, session);
+    const { symbol, name, decimals } = tokenData;
+
+    await this.TokenCreatorModel.create(
+      [
+        {
+          creator,
+          token,
+          timestamp,
+          txHash,
+          symbol,
+          name,
+          decimals,
+        } as any,
+      ],
+      { session }
+    );
   }
 
   private async _handlePairCreated(session, event) {
@@ -150,7 +181,6 @@ export class DexSyncHandler extends SyncHandlerService {
   }
   private async _handleSwap(session, event) {
     // PZT
-    console.log({ event });
     const { blockNumber, transactionHash } = event;
     const blockData = await web3Default.eth.getBlock(blockNumber);
     const timestamp = blockData.timestamp;
@@ -172,9 +202,6 @@ export class DexSyncHandler extends SyncHandlerService {
         ? +crypto.fromWei(amount0In)
         : +crypto.fromWei(amount0Out);
     const volumeUSD = ethAmount * ethUSD;
-    //
-    console.log({ volume: volumeUSD });
-
     await this.SwapModel.create(
       [
         {
@@ -335,7 +362,6 @@ export class DexSyncHandler extends SyncHandlerService {
       ],
       { session }
     );
-    
   }
 
   private async _tokenData(address: string, session) {
