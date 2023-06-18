@@ -43,6 +43,8 @@ export class AmmService {
     @InjectModel(TokenCreator)
     public readonly TokenCreatorModel: ReturnModelType<typeof TokenCreator>
   ) {
+    console.log(process.env.TEST_SOCKET);
+    
     if (process.env.TEST_SOCKET == "true") {
       setInterval(() => {
         emitAll("UPDATE_REFERRER", {
@@ -50,7 +52,7 @@ export class AmmService {
           newRef: "0x000",
           oldRef: null,
         });
-      }, 3000);
+      }, 5000);
     }
   }
 

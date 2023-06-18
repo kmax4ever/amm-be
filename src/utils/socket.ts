@@ -86,6 +86,8 @@ export const socketEmit = (roomId = null, event, data) => {
 export const emitAll = (event, data) => {
   try {
     if (!io) return;
+    console.log(event);
+    
     io.sockets.emit(event, data);
   } catch (error) {
     console.error("socketEmitAll error:", error);
