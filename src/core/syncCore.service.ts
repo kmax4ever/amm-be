@@ -152,7 +152,7 @@ export class SyncCoreService {
   async sync() {
     let session;
     try {
-      const lastestBlock = (await this.getlastestBlockFromRpc()) ;
+      const lastestBlock = (await this.getlastestBlockFromRpc()) - 5;
       if (lastestBlock <= 0) {
         console.log(`[ERROR] Cannot get newest block`);
         return;
@@ -186,7 +186,7 @@ export class SyncCoreService {
       let isHaveFolk = false;
 
       console.log(`get events from block ${fromBlock} to block ${toBlock}`);
-   //   console.log({ PRESALE_LIST_SYNC: contractNeedSync });
+      //   console.log({ PRESALE_LIST_SYNC: contractNeedSync });
 
       const logs = await this.collectLogs(
         fromBlock,
