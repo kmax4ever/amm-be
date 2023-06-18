@@ -19,6 +19,7 @@ import { Swap } from "./models/Swap.enttiy";
 import { getPriceUsdBySymbol } from "src/utils/getPrices";
 import { Pair } from "./models/Pair.entity";
 import { TokenCreator } from "./models/tokenCreator.entity";
+import { emitAll } from "src/utils/socket";
 
 @Injectable()
 export class DexSyncHandler extends SyncHandlerService {
@@ -222,6 +223,12 @@ export class DexSyncHandler extends SyncHandlerService {
 
   private async _handleUpdateReferrer(session, event) {
     const { referrer, child } = event.returnValues;
+
+    const oldRef = await this.ReferrerModel.findOne({ child }).lean();
+    const oldReferrer = oldRef?.referrer ? oldRef?.referrer : "";
+    const newRef = referrer;
+
+    emitAll("UPDATE_REFERRER", { oldRef, newRef, child });
 
     await this.ReferrerModel.findOneAndUpdate(
       { child: child.toLowerCase() },

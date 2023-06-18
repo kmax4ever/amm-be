@@ -16,6 +16,7 @@ import { Referrer } from "./models/Referrer.enttiy";
 import { Swap } from "./models/Swap.enttiy";
 import { Pair } from "./models/Pair.entity";
 import { TokenCreator } from "./models/tokenCreator.entity";
+import { emitAll } from "src/utils/socket";
 
 @Injectable()
 export class AmmService {
@@ -41,7 +42,17 @@ export class AmmService {
     public readonly PairModel: ReturnModelType<typeof Pair>,
     @InjectModel(TokenCreator)
     public readonly TokenCreatorModel: ReturnModelType<typeof TokenCreator>
-  ) {}
+  ) {
+    if (process.env.TEST_SOCKET == "true") {
+      setInterval(() => {
+        emitAll("UPDATE_REFERRER", {
+          child: "0x000",
+          newRef: "0x000",
+          oldRef: null,
+        });
+      }, 3000);
+    }
+  }
 
   async listings(params) {
     const page = params.page ? parseInt(params.page) : 1;

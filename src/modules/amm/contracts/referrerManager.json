@@ -1,0 +1,224 @@
+{
+    "abi": [
+      {
+        "inputs": [{ "internalType": "contract IFairLaunchToken", "name": "fairLaunchToken_", "type": "address" }],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "inputs": [],
+        "name": "HINT",
+        "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "VERSION",
+        "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "expInterval",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "fairLaunchToken",
+        "outputs": [{ "internalType": "contract IFairLaunchToken", "name": "", "type": "address" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [{ "internalType": "address", "name": "account_", "type": "address" }],
+        "name": "getAccountDetails",
+        "outputs": [
+          {
+            "components": [
+              { "internalType": "address", "name": "addr", "type": "address" },
+              { "internalType": "uint256", "name": "invValue", "type": "uint256" },
+              { "internalType": "uint256", "name": "updatedAt", "type": "uint256" }
+            ],
+            "internalType": "struct IReferral.SReferrer",
+            "name": "referrer",
+            "type": "tuple"
+          },
+          { "internalType": "uint256", "name": "asRefUnlockedSum", "type": "uint256" },
+          { "internalType": "uint256", "name": "asChildUnlockedSum", "type": "uint256" },
+          { "internalType": "uint256", "name": "selfUnlockedSum", "type": "uint256" },
+          { "internalType": "uint256", "name": "otherUnlockedSum", "type": "uint256" },
+          { "internalType": "uint256", "name": "totalChild", "type": "uint256" },
+          { "internalType": "uint256", "name": "returnP", "type": "uint256" },
+          { "internalType": "uint256", "name": "requiredInv", "type": "uint256" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getTaxs",
+        "outputs": [
+          { "internalType": "uint256", "name": "buyTaxP", "type": "uint256" },
+          { "internalType": "uint256", "name": "sellTaxP", "type": "uint256" },
+          { "internalType": "uint256", "name": "transferTaxP", "type": "uint256" },
+          { "internalType": "address", "name": "taxReceiver", "type": "address" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [{ "internalType": "address", "name": "account_", "type": "address" }],
+        "name": "lockDurationOf",
+        "outputs": [{ "internalType": "uint256", "name": "restLockDuration", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [{ "internalType": "address", "name": "account_", "type": "address" }],
+        "name": "lockedAOf",
+        "outputs": [{ "internalType": "uint256", "name": "lockedA", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "maxSelfUnlockP",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "minRefInvValue",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "refKing",
+        "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "refKingBalance",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "refKingUnlockP",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "referralManager",
+        "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [{ "internalType": "address", "name": "child_", "type": "address" }],
+        "name": "referrerOf",
+        "outputs": [
+          {
+            "components": [
+              { "internalType": "address", "name": "addr", "type": "address" },
+              { "internalType": "uint256", "name": "invValue", "type": "uint256" },
+              { "internalType": "uint256", "name": "updatedAt", "type": "uint256" }
+            ],
+            "internalType": "struct IReferral.SReferrer",
+            "name": "referrer",
+            "type": "tuple"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          { "internalType": "uint256", "name": "referrerBalance_", "type": "uint256" },
+          { "internalType": "uint256", "name": "lockedA_", "type": "uint256" }
+        ],
+        "name": "referrerUnlockA",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [{ "internalType": "address", "name": "child_", "type": "address" }],
+        "name": "requiredInvValue",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [{ "internalType": "address", "name": "referrer_", "type": "address" }],
+        "name": "returnPOf",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          { "internalType": "uint256", "name": "balance_", "type": "uint256" },
+          { "internalType": "uint256", "name": "lockedA_", "type": "uint256" }
+        ],
+        "name": "selfUnlockA",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [{ "internalType": "uint256", "name": "percent_", "type": "uint256" }],
+        "name": "setReturnP",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          { "internalType": "address", "name": "referrer_", "type": "address" },
+          { "internalType": "uint256", "name": "percent_", "type": "uint256" }
+        ],
+        "name": "setReturnPWithManager",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [{ "internalType": "address", "name": "referrer", "type": "address" }],
+        "name": "totalChildren",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          { "internalType": "address", "name": "account_", "type": "address" },
+          { "internalType": "enum ILockable.UnlockType", "name": "unlockType_", "type": "uint8" }
+        ],
+        "name": "unlockedSumOf",
+        "outputs": [{ "internalType": "uint256", "name": "unlockedSum", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "warDuration",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ]
+  }
+  

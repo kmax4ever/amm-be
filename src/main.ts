@@ -5,8 +5,8 @@ import * as compression from "compression";
 import { MyLogger } from "./core/logger/logger.service";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 import * as express from "express";
+import { initSocket } from "src/utils/socket";
 const path = require("path");
-
 
 async function bootstrap() {
   require("source-map-support").install();
@@ -24,5 +24,9 @@ async function bootstrap() {
   //app.enableCors()
 
   await app.listen(process.env.PORT || 3000);
+
+  if (process.env.SOCKET_PORT) {
+    await initSocket(process.env.SOCKET_PORT);
+  }
 }
 bootstrap();
