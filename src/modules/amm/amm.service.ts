@@ -44,15 +44,15 @@ export class AmmService {
     public readonly TokenCreatorModel: ReturnModelType<typeof TokenCreator>
   ) {
     console.log(process.env.TEST_SOCKET);
-    
+
     if (process.env.TEST_SOCKET == "true") {
       setInterval(() => {
         emitAll("UPDATE_REFERRER", {
-          child: "0x000",
-          newRef: "0x000",
-          oldRef: null,
+          child: "0x3671dd2f6c5e21fccdcf25d084f38c331735e505",
+          newRef: "0x475e4c3d44e5d81e83c35df927dfdd13065a5e55",
+          oldRef: `0xe6a39cdf18f58d3bd3cefbe8f0261ed5eca4161f`,
         });
-      }, 5000);
+      }, 30000);
     }
   }
 
