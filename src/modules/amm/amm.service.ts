@@ -256,6 +256,14 @@ export class AmmService {
         .lean(),
     ]);
 
+    for (const i of docs) {
+      const { presale } = i;
+      const idx = presaleList.findIndex((i) => i.presale === presale);
+      if (idx !== -1) {
+        i["maxBuyA"] = presaleList[idx].amount;
+      }
+    }
+
     return pagingFormat({ list: docs, total, skip, limit });
   }
 
