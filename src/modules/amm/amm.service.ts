@@ -256,14 +256,6 @@ export class AmmService {
         .lean(),
     ]);
 
-    for (const i of docs) {
-      const { presale } = i;
-      const idx = presaleList.findIndex((i) => i.presale === presale);
-      if (idx !== -1) {
-        i["maxBuyA"] = presaleList[idx].amount;
-      }
-    }
-
     return pagingFormat({ list: docs, total, skip, limit });
   }
 
@@ -285,6 +277,9 @@ export class AmmService {
 
     if (invester) {
       presaleItem[`inWhiteList`] = whiteListData ? true : false;
+      presaleItem[`maxBuyA`] = whiteListData?.amount
+        ? whiteListData?.amount
+        : "0";
     }
 
     return presaleItem;
