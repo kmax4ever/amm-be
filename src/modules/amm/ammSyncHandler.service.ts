@@ -215,6 +215,7 @@ export class DexSyncHandler extends SyncHandlerService {
           ethUSD,
           volumeUSD,
           timestamp,
+          transactionHash
         } as any,
       ],
       { session }

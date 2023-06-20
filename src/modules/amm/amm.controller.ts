@@ -24,9 +24,8 @@ export class AmmController {
     @InjectModel(DexMatching)
     public readonly DexMatchingModel: ReturnModelType<typeof DexMatching>,
     private readonly logger: MyLogger,
-    private readonly ammService: AmmService
-  ) // private readonly cronService: AmmCronService
-  {
+    private readonly ammService: AmmService // private readonly cronService: AmmCronService
+  ) {
     this.logger.setContext("AmmController");
   }
 
@@ -174,4 +173,11 @@ export class AmmController {
   //   await this.cronService.crawlTokenData();
   //   return true;
   // }
+
+  @Get("statistic")
+  @UseInterceptors(CacheInterceptor)
+  async statistic(@Req() req) {
+    const rs = await this.ammService.statistic();
+    return rs;
+  }
 }

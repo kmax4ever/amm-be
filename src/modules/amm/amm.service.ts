@@ -441,4 +441,29 @@ export class AmmService {
 
     return pagingFormat({ list: docs, total, skip, limit });
   }
+
+  async statistic() {
+    const rs = {
+      listing: { label: [], value: [] },
+    };
+    const now = new Date().getTime() / 1000;
+
+    const [active, comming, ended] = await Promise.all([
+      this.ListtingModel.countDocuments({
+        startedAt: { $lte: now },
+        endedAt: { $gte: now },
+      }),
+      this.ListtingModel.countDocuments({
+        startedAt: { $gt: now },
+      }),
+      this.ListtingModel.countDocuments({
+        endedAt: { $lt: now },
+      }),
+    ]);
+
+    rs.listing.label = ["Active", "Comming", "Ended"];
+    rs.listing.value = [active, comming, ended];
+
+    return rs;
+  }
 }
