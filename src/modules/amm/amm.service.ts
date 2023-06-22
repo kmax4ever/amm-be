@@ -485,4 +485,55 @@ export class AmmService {
 
     return rs;
   }
+
+  async topVolume(params) {
+    const limit =
+      parseInt(params.limit) > 10 || !params.limit
+        ? 10
+        : parseInt(params.limit);
+
+    const referrer = params?.referrer || "";
+
+    if (!referrer) {
+      return [];
+    }
+
+    const now = new Date().getTime() / 1000;
+
+    const time30day = now - 30 * 24 * 60 * 60;
+
+    const childs = await this.ReferrerModel.find({
+      referrer: referrer.toLowerCase(),
+    }).lean();
+
+    if (childs.length == 0) {
+      return [];
+    }
+
+    const childsAddress = childs.map((i) => i.child) as any;
+
+    const volumeChilds = await this.SwapModel.aggregate([
+      {
+        $match: {
+          to: { $in: childsAddress },
+          timestamp: { $gte: time30day },
+        },
+      },
+      {
+        $group: {
+          _id: "$to",
+          txCount: { $sum: 1 },
+          volumeUSD: { $sum: "$volumeUSD" },
+        },
+      },
+      {
+        $sort: { volumeUSD: -1 },
+      },
+      {
+        $limit: limit,
+      },
+    ]);
+
+    return volumeChilds;
+  }
 }

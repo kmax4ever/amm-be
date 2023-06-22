@@ -180,4 +180,12 @@ export class AmmController {
     const rs = await this.ammService.statistic();
     return rs;
   }
+
+  @Get("topVolume")
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(600)
+  async topVolume(@Req() req) {
+    const rs = await this.ammService.topVolume(req.query);
+    return rs;
+  }
 }
