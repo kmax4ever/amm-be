@@ -448,24 +448,40 @@ export class AmmService {
   async statistic() {
     const rs = {
       listing: { label: [], value: [] },
+      statistic: { label: [], value: [] },
     };
     const now = new Date().getTime() / 1000;
 
-    const [active, comming, ended] = await Promise.all([
+    const [
+      active,
+      comming,
+      ended,
+      countListing,
+      countPresale,
+      countToken,
+      countLock,
+    ] = await Promise.all([
       this.ListtingModel.countDocuments({
         startedAt: { $lte: now },
         endedAt: { $gte: now },
-      }),
+      }).lean(),
       this.ListtingModel.countDocuments({
         startedAt: { $gt: now },
-      }),
+      }).lean(),
       this.ListtingModel.countDocuments({
         endedAt: { $lt: now },
-      }),
+      }).lean(),
+      this.ListtingModel.countDocuments({}).lean(),
+      this.PreSaleListModel.countDocuments({}).lean(),
+      this.TokenCreatorModel.countDocuments({}).lean(),
+      this.LockModel.countDocuments({}).lean(),
     ]);
 
     rs.listing.label = ["Active", "Comming", "Ended"];
     rs.listing.value = [active, comming, ended];
+
+    rs.statistic.label = ["Listing", "Presale", "Tokens", "Lock"];
+    rs.statistic.value = [countListing, countPresale, countToken, countLock];
 
     return rs;
   }
