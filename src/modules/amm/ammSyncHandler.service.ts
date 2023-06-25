@@ -19,6 +19,7 @@ import { Swap } from "./models/Swap.enttiy";
 import { getPriceUsdBySymbol } from "src/utils/getPrices";
 import { Pair } from "./models/Pair.entity";
 import { TokenCreator } from "./models/tokenCreator.entity";
+import { Staking } from "./models/Staking.entity";
 import { emitAll } from "src/utils/socket";
 
 @Injectable()
@@ -51,7 +52,9 @@ export class DexSyncHandler extends SyncHandlerService {
     @InjectModel(Pair)
     public readonly PairModel: ReturnModelType<typeof Pair>,
     @InjectModel(TokenCreator)
-    public readonly TokenCreatorModel: ReturnModelType<typeof TokenCreator>
+    public readonly TokenCreatorModel: ReturnModelType<typeof TokenCreator>,
+    @InjectModel(Staking)
+    public readonly StakingModel: ReturnModelType<typeof Staking>
   ) {
     super(EventModel);
     this.contracts = CONTRACT_SYNC();
@@ -124,11 +127,85 @@ export class DexSyncHandler extends SyncHandlerService {
         case "TokenDeclared":
           await this.handleTokenDeclare(session, event);
           break;
+        case "EmitPool":
+          await this._handleCreatePool(session, event);
+          break;
+
+        case "Stake":
+          await this._handleStake(session, event);
+          break;
+        case "Unstake":
+          await this._handleUnStake(session, event);
+          break;
+
+        case "ClaimReward":
+          await this._handleClaimReward(session, event);
+          break;
 
         default:
           break;
       }
     }
+  }
+
+  private async _handleStake(session, event) {
+    console.log("_handleStake");
+  }
+
+  private async _handleUnStake(session, event) {
+    console.log("_handleUnStake");
+  }
+
+  private async _handleClaimReward(session, event) {
+    console.log("_handleClaimReward");
+  }
+
+  private async _handleCreatePool(session, event) {
+    console.log("_handleCreatePool");
+    const {
+      creator,
+      staking,
+      distributor,
+      lockDuration,
+      rps,
+      distributionStartedAt,
+      isApproved,
+    } = event.returnValues;
+
+    const { blockNumber, transactionHash } = event;
+    const block = await web3Default.eth.getBlock(blockNumber);
+    const timestamp = block.timestamp;
+
+    contractNeedSync.push(staking);
+
+    const stakingContract = crypto.stakingContract(staking);
+
+    const [depositAddr, rewardTokenAddr] = await Promise.all([
+      stakingContract.depositToken(),
+      stakingContract.rewardToken(),
+    ]);
+
+    const [depositTokenData, rewardTokenData] = await Promise.all([
+      this._tokenData(depositAddr, session),
+      this._tokenData(rewardTokenAddr, session),
+    ]);
+
+    await this.StakingModel.findOneAndUpdate(
+      { staking },
+      {
+        creator,
+        distributor,
+        lockDuration: +lockDuration,
+        rps,
+        distributionStartedAt: +distributionStartedAt,
+        isApproved,
+        timestamp,
+        transactionHash,
+        depositToken: depositTokenData,
+        rewardToken: rewardTokenData,
+      },
+      { session, upsert: true }
+    );
   }
 
   private async handleTokenDeclare(session, event) {
@@ -215,7 +292,7 @@ export class DexSyncHandler extends SyncHandlerService {
           ethUSD,
           volumeUSD,
           timestamp,
-          transactionHash
+          transactionHash,
         } as any,
       ],
       { session }

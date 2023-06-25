@@ -16,6 +16,7 @@ import { Referrer } from "./models/Referrer.enttiy";
 import { Swap } from "./models/Swap.enttiy";
 import { Pair } from "./models/Pair.entity";
 import { TokenCreator } from "./models/tokenCreator.entity";
+import { Staking } from "./models/Staking.entity";
 import { emitAll } from "src/utils/socket";
 
 @Injectable()
@@ -41,7 +42,9 @@ export class AmmService {
     @InjectModel(Pair)
     public readonly PairModel: ReturnModelType<typeof Pair>,
     @InjectModel(TokenCreator)
-    public readonly TokenCreatorModel: ReturnModelType<typeof TokenCreator>
+    public readonly TokenCreatorModel: ReturnModelType<typeof TokenCreator>,
+    @InjectModel(Staking)
+    public readonly StakingModel: ReturnModelType<typeof Staking>
   ) {
     console.log(process.env.TEST_SOCKET);
 
@@ -535,5 +538,28 @@ export class AmmService {
     ]);
 
     return volumeChilds;
+  }
+
+  async stakings(params) {
+    const page = params.page ? parseInt(params.page) : 1;
+    const limit =
+      parseInt(params.limit) > 10 || !params.limit
+        ? 10
+        : parseInt(params.limit);
+    const skip = parseInt(params.skip);
+    const startIndex = isNaN(+params.skip) ? (page - 1) * limit : skip;
+
+    const query = params.isApproved == "true" ? { isApproved: true } : {};
+
+    const [total, docs] = await Promise.all([
+      this.StakingModel.countDocuments(query).lean(),
+      this.StakingModel.find(query)
+        .sort({ _id: -1 })
+        .limit(limit)
+        .skip(startIndex)
+        .lean(),
+    ]);
+
+    return pagingFormat({ list: docs, total, skip, limit });
   }
 }

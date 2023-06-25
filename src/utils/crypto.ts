@@ -5,7 +5,8 @@ import * as crypto from "crypto";
 import * as utils from "web3-utils";
 import * as ERC20_ABI from "src/modules/amm/contracts/erc20.json";
 import * as LISTING_FACTORY_JSON from "src/modules/amm/contracts/ListingFactory.json";
-import * as TOKEN_LOCKER_JSON from "src/modules/amm/contracts/TokenLocker.json"
+import * as TOKEN_LOCKER_JSON from "src/modules/amm/contracts/TokenLocker.json";
+import * as STAKING_JSON from "src/modules/amm/contracts/Staking.json";
 import { ADDRESS_SETTINGS } from "src/modules/amm/config/dexConfig";
 
 const secret = process.env.APP_SECRET || "app";
@@ -82,6 +83,14 @@ export default {
       TOKEN_LOCKER_JSON.abi,
       provider
     );
+  },
+  stakingContract(address: string) {
+    const stakingContract = new ethers.Contract(
+      address,
+      STAKING_JSON.abi,
+      provider
+    );
+    return stakingContract;
   },
 };
 

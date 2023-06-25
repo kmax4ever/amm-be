@@ -24,6 +24,7 @@ import { Referrer } from "src/modules/amm/models/Referrer.enttiy";
 import { Swap } from "src/modules/amm/models/Swap.enttiy";
 import { Pair } from "src/modules/amm/models/Pair.entity";
 import { TokenCreator } from "src/modules/amm/models/tokenCreator.entity";
+import { Staking } from "src/modules/amm/models/Staking.entity";
 @Module({
   imports: [
     CacheModule.register({
@@ -53,6 +54,7 @@ import { TokenCreator } from "src/modules/amm/models/tokenCreator.entity";
       Swap,
       Pair,
       TokenCreator,
+      Staking
     ]),
   ],
   controllers: [CoreController],

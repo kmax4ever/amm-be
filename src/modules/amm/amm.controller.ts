@@ -188,4 +188,11 @@ export class AmmController {
     const rs = await this.ammService.topVolume(req.query);
     return rs;
   }
+
+  @Get("stakings")
+  @UseInterceptors(CacheInterceptor)
+  async stakings(@Req() req) {
+    const rs = await this.ammService.stakings(req.query);
+    return rs;
+  }
 }

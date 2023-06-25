@@ -12,6 +12,7 @@ import { Listing } from "src/modules/amm/models/Listing.entity";
 import { SyncHandlerService } from "./syncHandler.service";
 import { PreSaleList } from "src/modules/amm/models/PresaleList.entity";
 import { ADDRESS_SYNC } from "src/modules/amm/config/dexConfig";
+import { Staking } from "src/modules/amm/models/Staking.entity";
 const Web3 = require("web3");
 export const web3Default = new Web3(config.rpcEndpoint);
 
@@ -74,7 +75,9 @@ export class SyncCoreService {
     @InjectModel(Listing)
     public readonly DexOrderModel: ReturnModelType<typeof Listing>,
     @InjectModel(PreSaleList)
-    public readonly PreSaleListModel: ReturnModelType<typeof PreSaleList>
+    public readonly PreSaleListModel: ReturnModelType<typeof PreSaleList>,
+    @InjectModel(Staking)
+    public readonly StakingModel: ReturnModelType<typeof Staking>
   ) {
     this.modules = [dexSyncHandler];
 
@@ -129,6 +132,13 @@ export class SyncCoreService {
     if (preSales.length > 0) {
       const presaleAddress = preSales.map((i) => i.presale);
       contractNeedSync.push(...presaleAddress);
+    }
+
+    const stakings = await this.StakingModel.find({}, { staking: 1 }).lean();
+
+    if (stakings.length > 0) {
+      const stakingsAddress = stakings.map((i) => i.staking);
+      contractNeedSync.push(...stakingsAddress);
     }
   }
 
@@ -186,7 +196,7 @@ export class SyncCoreService {
       let isHaveFolk = false;
 
       console.log(`get events from block ${fromBlock} to block ${toBlock}`);
-      //   console.log({ PRESALE_LIST_SYNC: contractNeedSync });
+      console.log({ PRESALE_LIST_SYNC: contractNeedSync });
 
       const logs = await this.collectLogs(
         fromBlock,
