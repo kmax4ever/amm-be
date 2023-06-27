@@ -306,7 +306,7 @@ export class DexSyncHandler extends SyncHandlerService {
     const oldReferrer = oldRef?.referrer ? oldRef?.referrer : "";
     const newRef = referrer;
 
-    emitAll("UPDATE_REFERRER", { oldRef, newRef, child });
+    emitAll("UPDATE_REFERRER", { oldRef: oldReferrer, newRef, child });
 
     await this.ReferrerModel.findOneAndUpdate(
       { child: child.toLowerCase() },
