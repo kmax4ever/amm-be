@@ -195,4 +195,11 @@ export class AmmController {
     const rs = await this.ammService.stakings(req.query);
     return rs;
   }
+
+  @Get("presale_by_owner")
+  @UseInterceptors(CacheInterceptor)
+  async getLastPresaleByOwner(@Req() req) {
+    const rs = await this.ammService.presaleByOwner(req.query);
+    return rs;
+  }
 }

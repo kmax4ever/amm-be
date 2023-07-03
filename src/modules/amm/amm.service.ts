@@ -562,4 +562,23 @@ export class AmmService {
 
     return pagingFormat({ list: docs, total, skip, limit });
   }
+
+  async presaleByOwner(params) {
+    const owner = params.owner ? params.owner.toLowerCase() : null;
+    const { token, currency } = params;
+    if (!owner) {
+      return null;
+    }
+
+    const rs = await this.PreSaleListModel.find({
+      owner,
+      "token.address": token.toLowerCase(),
+      "currency.address": currency.toLowerCase(),
+    })
+      .sort({ _id: -1 })
+      .limit(1)
+      .lean();
+
+    return rs[0] ? rs[0] : null;
+  }
 }
