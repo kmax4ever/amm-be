@@ -300,17 +300,23 @@ export class DexSyncHandler extends SyncHandlerService {
   }
 
   private async _handleUpdateReferrer(session, event) {
+    const token = event.address.toLowerCase();
     const { referrer, child } = event.returnValues;
 
     const oldRef = await this.ReferrerModel.findOne({ child }).lean();
     const oldReferrer = oldRef?.referrer ? oldRef?.referrer : "";
     const newRef = referrer;
 
-    emitAll("UPDATE_REFERRER", { oldRef: oldReferrer, newRef, child });
+    emitAll("UPDATE_REFERRER", {
+      oldRef: oldReferrer,
+      newRef,
+      child,
+      token,
+    });
 
     await this.ReferrerModel.findOneAndUpdate(
       { child: child.toLowerCase() },
-      { referrer, child },
+      { referrer, child, token },
       { session, upsert: true }
     );
   }

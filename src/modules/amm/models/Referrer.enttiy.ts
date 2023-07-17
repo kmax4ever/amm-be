@@ -9,4 +9,6 @@ export class Referrer {
 
   @prop({ required: true, lowercase: true })
   child: string;
+  @prop({ lowercase: true })
+  token?: string;
 }
