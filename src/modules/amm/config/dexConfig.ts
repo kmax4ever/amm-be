@@ -10,6 +10,7 @@ import * as FactoryJson from "../contracts/UniswapV2Factory.json";
 import * as TokenEmitter from "../contracts/TokenEmitter.json";
 import * as StakingFactoryJson from "../contracts/StakingFactory.json";
 import * as Staking from "../contracts/Staking.json";
+import * as Kols from "../contracts/Kols.json";
 
 export const ADDRESS_SETTINGS = {
   LISTING_FACTORY: process.env.LISTING_FACTORY,
@@ -20,6 +21,7 @@ export const ADDRESS_SETTINGS = {
   FACTORY: process.env.FACTORY,
   TOKEN_EMITTER: process.env.TOKEN_EMITTER,
   STAKING_FACTORY: process.env.STAKING_FACTORY,
+  KOLS: `0xef8ec15f2b310e2588ae744c27a6372a6701e0ef`,
 };
 
 var contractsNeedSync = [];
@@ -46,6 +48,7 @@ export const CONTRACT_SYNC = () => {
     { abi: TokenEmitter.abi, address: "" },
     { abi: StakingFactoryJson.abi, address: "" },
     { abi: Staking.abi, address: "" },
+    { abi: Kols.abi, address: "" },
   ];
 
   for (let address of ADDRESS_SYNC) {
