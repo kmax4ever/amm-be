@@ -49,7 +49,7 @@ export class AmmCronService {
   }
 
   //@Cron("* * * * *") //every minute
-  @Cron("* * * * *") //every hour
+  @Cron("* 1 * * *") //every hour
   async cronCrawlTokenData() {
     await this.crawlTokenData();
   }
