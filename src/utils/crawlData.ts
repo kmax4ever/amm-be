@@ -17,16 +17,19 @@ export const getData = async () => {
     await page.goto(link);
 
     await waitMs(3000);
-    const texts = await page.locator(`span.ng-tns-c101-6`).allInnerTexts();
+    const texts = await page.locator(`span.ng-tns-c100-6`).allInnerTexts();
+
+    //texts.map((i: any, index) => console.log(i, index));
+
     const liqidity = texts[3];
-    const volume24h = texts[5];
-    const pooledWETH = texts[6];
-    const pooledPZT = texts[7];
-    const marketcap = texts[8];
-    const totalSupply = texts[9];
-    const holders = texts[10];
-    const totalTx = texts[11];
-    const createdAt = texts[12];
+    const volume24h = texts[4];
+    const pooledWETH = texts[5];
+    const pooledPZT = texts[6];
+    const marketcap = texts[7];
+    const totalSupply = texts[8];
+    const holders = texts[9];
+    const totalTx = '10k';
+    const createdAt = texts[10];
 
     await page.close();
     await browser.close();

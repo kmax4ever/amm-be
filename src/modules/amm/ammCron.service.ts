@@ -109,7 +109,7 @@ export class AmmCronService {
 
     const data = await getData();
     console.log("xxx data", data);
-    if (data) {
+    if (data?.liqidity) {
       await this.StatisticModel.findOneAndUpdate(
         {},
         { tokenData: data },
