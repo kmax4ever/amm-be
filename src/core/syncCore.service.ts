@@ -123,9 +123,12 @@ export class SyncCoreService {
     }
 
     contractNeedSync = ADDRESS_SYNC;
+    const date = new Date();
+    const _1month = new Date();
+    _1month.setDate(date.getDate() - 30);
 
     const preSales = await this.PreSaleListModel.find(
-      {},
+      { createdAt: { $gt: _1month } },
       { presale: 1 }
     ).lean();
 
